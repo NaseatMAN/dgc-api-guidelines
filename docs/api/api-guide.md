@@ -57,7 +57,43 @@ Rules:
 - Configuration is centralized and environment-specific in `appsettings.*.json`.
 - Shared utilities must be small, versioned, and explicitly owned.
 
-## 3. Resource naming conventions
+## 3. Dependency injection and configuration conventions
+
+- Register services explicitly by interface with clear lifetimes (`Singleton`, `Scoped`, `Transient`).
+- Validate options on startup and fail fast for missing or invalid configuration.
+- Do not access configuration directly in domain or application layers.
+- Use managed identities and Key Vault references for secrets.
+
+Short ASP.NET Core example:
+
+```csharp
+builder.Services
+    .AddOptions<StorageOptions>()
+    .Bind(builder.Configuration.GetSection("Storage"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+```
+
+## 4. APIM policy standards
+
+Apply API Management policies consistently:
+
+- Validate JWT and enforce required scopes or roles at the gateway.
+- Apply rate limits and quotas by product and subscription.
+- Normalize headers (e.g., `x-correlation-id`) and reject oversized payloads.
+- Cache only idempotent `GET` responses when data is safe to cache.
+
+Example policies:
+
+- `validate-jwt`
+- `rate-limit-by-key`
+- `quota-by-key`
+- `set-header`
+- `check-header`
+
+## 5. Resource naming conventions
 
 - Use nouns, plural, kebab-case.
 - Avoid verbs in resource names; use sub-resources for relationships.
@@ -76,7 +112,7 @@ Do not use:
 - `customerList`
 - `customerDetails`
 
-## 4. URL structure
+## 6. URL structure
 
 Base pattern:
 
@@ -94,7 +130,7 @@ Sub-resources:
 - `GET /customers/{customer-id}/orders`
 - `POST /customers/{customer-id}/orders`
 
-## 5. HTTP methods and correct usage
+## 7. HTTP methods and correct usage
 
 Use standard methods and semantics:
 
@@ -117,7 +153,7 @@ PATCH  /customers/{customer-id}
 DELETE /customers/{customer-id}
 ```
 
-## 6. Standard HTTP status codes
+## 8. Standard HTTP status codes
 
 Use status codes consistently with Microsoft guidance:
 
@@ -137,7 +173,7 @@ Use status codes consistently with Microsoft guidance:
 - `500 Internal Server Error` unhandled error
 - `503 Service Unavailable` dependency unavailable or maintenance
 
-## 7. API versioning strategies
+## 9. API versioning strategies
 
 Preferred: date-based versioning in the URL path.
 
@@ -153,7 +189,22 @@ Rules:
 - Document a clear deprecation timeline and migration path.
 - Do not version by query parameter unless mandated by a legacy client.
 
-## 8. Query parameters
+## 10. API change management and deprecation
+
+- Breaking changes require a new version and a published migration guide.
+- Announce deprecation timelines with explicit dates (minimum 6 months).
+- Maintain at least one previous version during the deprecation window.
+- Track usage by version in APIM analytics and notify top consumers.
+
+Example deprecation header:
+
+```
+Deprecation: true
+Sunset: Wed, 30 Apr 2025 23:59:59 GMT
+Link: </2025-01-15/customers>; rel="successor-version"
+```
+
+## 11. Query parameters
 
 Filtering:
 
@@ -198,7 +249,7 @@ Recommended response shape for paging:
 }
 ```
 
-## 9. Request and response payload conventions
+## 12. Request and response payload conventions
 
 - JSON only: `Content-Type: application/json`.
 - Use camelCase for property names.
@@ -230,7 +281,7 @@ Create response:
 }
 ```
 
-## 10. Standard error response (RFC 7807)
+## 13. Standard error response (RFC 7807)
 
 Use Problem Details for all error responses.
 
@@ -257,7 +308,7 @@ Example:
 }
 ```
 
-## 11. Idempotency handling
+## 14. Idempotency handling
 
 Use `Idempotency-Key` for POST requests that create resources.
 
@@ -272,7 +323,7 @@ POST /payments
 Idempotency-Key: 7f41dba9-8f61-4dc5-8fd8-5f2d0e6a6f1f
 ```
 
-## 12. Authentication and authorization
+## 15. Authentication and authorization
 
 Use OAuth 2.0 with OpenID Connect.
 
@@ -295,7 +346,7 @@ Short ASP.NET Core example:
 public IActionResult GetCustomer(string customerId) => Ok();
 ```
 
-## 13. CORS and OPTIONS handling
+## 16. CORS and OPTIONS handling
 
 - Configure CORS centrally in APIM where possible.
 - Allow only trusted origins.
@@ -310,7 +361,7 @@ Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
 Access-Control-Allow-Headers: Authorization, Content-Type, Idempotency-Key
 ```
 
-## 14. Logging, tracing, and correlation ID
+## 17. Logging, tracing, and correlation ID
 
 Requirements:
 
@@ -343,7 +394,31 @@ app.Use(async (context, next) =>
 });
 ```
 
-## 15. Health check endpoints
+## 18. Logging schema and retention
+
+Minimum log fields:
+
+- `timestampUtc`
+- `serviceName`
+- `environment`
+- `operationName`
+- `httpMethod`
+- `path`
+- `statusCode`
+- `durationMs`
+- `correlationId`
+- `clientIp`
+- `userId` (or `subjectId`)
+- `tenantId`
+
+Retention and privacy:
+
+- Log access and admin operations for auditing.
+- Mask or hash PII; never log secrets or tokens.
+- Define retention by data classification; default to 30–90 days for operational logs.
+- Store audit logs in immutable storage for regulatory requirements.
+
+## 19. Health check endpoints
 
 Expose health checks for APIM and platform monitoring.
 
@@ -370,7 +445,7 @@ Example:
 }
 ```
 
-## 16. Security best practices
+## 20. Security best practices
 
 - Use TLS 1.2+ and disable legacy protocols.
 - Validate and sanitize all inputs.
@@ -383,7 +458,7 @@ Example:
 - Apply least privilege to identities and roles.
 - Log security events (auth failures, access denied, elevated actions).
 
-## 17. Example REST flow
+## 21. Example REST flow
 
 Create customer:
 
@@ -430,14 +505,27 @@ Content-Type: application/json
 }
 ```
 
-## 18. Operational guidance
+## 22. Operational guidance
 
 - Define SLOs (availability, latency, error rate).
 - Monitor with Azure Monitor and Application Insights.
 - Use APIM policies for throttling, caching, and header normalization.
 - Document dependencies and data retention requirements.
 
-## 19. References
+## 23. Governance checklist
+
+Before publishing an API:
+
+- Resource model reviewed and approved.
+- Versioning and deprecation plan documented.
+- Authentication and authorization tested with least privilege.
+- RFC 7807 error model implemented and validated.
+- Correlation ID and tracing confirmed end-to-end.
+- Health checks and dependency monitoring enabled.
+- APIM policies applied (JWT validation, throttling, headers).
+- Security review completed and threat model recorded.
+
+## 24. References
 
 - Microsoft REST API Guidelines
 - Azure Well-Architected Framework
