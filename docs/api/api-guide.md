@@ -137,7 +137,7 @@ Use standard methods and semantics:
 - `GET` read a resource or collection (safe, idempotent)
 - `POST` create a resource or execute a non-idempotent action
 - `PUT` full replacement of a resource (idempotent)
-- `PATCH` partial update (idempotent when request is the same)
+- `PATCH` partial update (design to be idempotent when possible; use `If-Match` for concurrency)
 - `DELETE` delete a resource (idempotent)
 - `HEAD` metadata-only response for `GET`
 - `OPTIONS` CORS and method discovery
@@ -172,6 +172,12 @@ Use status codes consistently with Microsoft guidance:
 - `429 Too Many Requests` throttling
 - `500 Internal Server Error` unhandled error
 - `503 Service Unavailable` dependency unavailable or maintenance
+
+Response header standards:
+
+- `202 Accepted`: include a status URL in `Operation-Location` (preferred) or `Location`; include `Retry-After` when clients should poll.
+- `429 Too Many Requests` and `503 Service Unavailable`: include `Retry-After` to guide backoff.
+- `304 Not Modified`: requires `ETag` and `If-None-Match` for conditional `GET` and `Cache-Control` for caching behavior.
 
 ## 9. API versioning strategies
 
@@ -221,7 +227,8 @@ GET /customers?sort=last-name,-created-date
 Paging:
 
 - Prefer offset + limit for simple datasets.
-- Use continuation tokens for large or frequently changing datasets.
+- Use opaque continuation tokens for large or frequently changing datasets.
+- Return a `nextLink` when a server-generated URL is more reliable than client-constructed paging.
 
 Examples:
 
@@ -245,7 +252,8 @@ Recommended response shape for paging:
     "offset": 100,
     "total": 1200
   },
-  "continuationToken": null
+  "continuationToken": null,
+  "nextLink": null
 }
 ```
 
@@ -256,7 +264,7 @@ Recommended response shape for paging:
 - Use ISO 8601 UTC for timestamps: `2024-10-01T13:45:30Z`.
 - Avoid nulls when possible; omit optional fields if not set.
 - Use strong, stable IDs and include `id` for resources.
-- Use `etag` for concurrency when applicable.
+- Use `etag` for concurrency when applicable; require `If-Match` on updates and support `If-None-Match` for conditional `GET` where caching is allowed.
 
 Create request:
 
@@ -415,7 +423,7 @@ Retention and privacy:
 
 - Log access and admin operations for auditing.
 - Mask or hash PII; never log secrets or tokens.
-- Define retention by data classification; default to 30–90 days for operational logs.
+- Define retention by data classification; default to 30-90 days for operational logs.
 - Store audit logs in immutable storage for regulatory requirements.
 
 ## 19. Health check endpoints
