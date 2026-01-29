@@ -1,6 +1,6 @@
 # Azure REST API Design Guidelines
 
-Audience: Backend engineers building ASP.NET Core (.NET 8) services fronted by Azure API Management (APIM).
+Audience: Backend engineers building ASP.NET Core (.NET 10) services fronted by Azure API Management (APIM).
 
 This document follows Microsoft REST API Guidelines and aligns with the Azure Well-Architected Framework (security, reliability, performance, operational excellence, cost).
 
@@ -23,7 +23,6 @@ Recommended solution layout:
 src/
   Dgc.Api/
     Controllers/
-    Filters/
     Middleware/
     Program.cs
     appsettings.json
