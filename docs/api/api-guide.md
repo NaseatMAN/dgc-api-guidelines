@@ -21,30 +21,47 @@ Recommended solution layout:
 
 ```
 src/
-  Dgc.Api/
-    Controllers/
-    Filters/
-    Middleware/
-    Program.cs
-    appsettings.json
-  Dgc.Application/
+  MyProject.Domain/
+    Entities/        # Database tables class (auto-generated)
+    Dtos/            # Business logic class
+    Events/          # Objects for background and external tasks
+    Enums/           # All lookups
+    Constants/       # All constants
+    Exceptions/      # Custom exception
+  MyProject.Application/
     Abstractions/
-    Dtos/
-    Services/
-    Validators/
-  Dgc.Domain/
-    Entities/
-    ValueObjects/
-    Enums/
-    Exceptions/
-  Dgc.Infrastructure/
-    Data/
-    Repositories/
-    ExternalServices/
-    DependencyInjection/
+      Interfaces/    # Interfaces for UnitOfWork, Application, Infrastructure
+      Abstracts/     # Base overridable class for business services
+    Features/
+      Orders/        # Module service
+        Commands/    # Module commands
+        Queries/     # Module queries
+        Handlers/    # Module handlers
+        Dtos/        # Module DTOs
+      User/          # Non-module service
+        UserRepository/ # Table user repository class
+        UserService/    # User business logic
+    Validations/     # Validation attribute model state
+    Mappers/         # Static mapper class for DTO <-> entity
+    Utils/           # Extra static methods for existing classes
+    Exceptions/      # Custom exception
+  MyProject.Infrastructure/
+    Persistence/
+      Context/       # DB context class (auto-generated)
+      Migrations/    # Migration scripts and documentation (optional)
+      Repositories/  # Repository generic pattern
+    Caching/         # Redis and in-memory caching with framework
+    FileStorage/     # Blob service or file operations
+    ExternalServices/ # HTTP call external API
+  MyProject.Api/
+    Controllers/     # API endpoints
+    Extensions/      # Static methods for registering services
+    Filters/         # API filters and action filter attributes
+    Middlewares/     # API middleware logic
+    Program.cs
 tests/
-  Dgc.UnitTests/
-  Dgc.IntegrationTests/
+  MyProject.UnitTests/
+  MyProject.IntegrationTests/
 docs/
   api/
 ```
@@ -247,11 +264,6 @@ Recommended response shape for paging:
       "displayName": "Ada Lovelace"
     }
   ],
-  "page": {
-    "limit": 50,
-    "offset": 100,
-    "total": 1200
-  },
   "continuationToken": null,
   "nextLink": null
 }

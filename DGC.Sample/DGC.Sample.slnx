@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="DGC.Sample.Api/DGC.Sample.Api.csproj" />
+    <Project Path="DGC.Sample.Application/DGC.Sample.Application.csproj" />
+    <Project Path="DGC.Sample.Domain/DGC.Sample.Domain.csproj" />
+    <Project Path="DGC.Sample.Infrastructure/DGC.Sample.Infrastructure.csproj" />
+  </Folder>
+</Solution>

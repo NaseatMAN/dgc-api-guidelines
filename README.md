@@ -178,6 +178,99 @@ Testing is **mandatory**.
 
 ---
 
+## PostgreSQL setup (sample CRUD)
+
+1. Ensure PostgreSQL is running and update the connection string in `DGC.Sample.Api/appsettings.json` if needed.
+2. Add EF Core tools:
+   - Package Manager Console (VS): `Install-Package Microsoft.EntityFrameworkCore.Design -Project DGC.Sample.Infrastructure`
+   - CLI: `dotnet tool install --global dotnet-ef --version 10.0.0`
+3. Create the initial migration:
+   - PMC: `Add-Migration InitialCreate -Project DGC.Sample.Infrastructure -StartupProject DGC.Sample.Api`
+   - CLI: `dotnet ef migrations add InitialCreate --project DGC.Sample.Infrastructure --startup-project DGC.Sample.Api`
+4. Apply the migration:
+   - PMC: `Update-Database -Project DGC.Sample.Infrastructure -StartupProject DGC.Sample.Api`
+   - CLI: `dotnet ef database update --project DGC.Sample.Infrastructure --startup-project DGC.Sample.Api`
+
+---
+
+## Test the API (cURL)
+
+Base URL (default): `https://localhost:5288`
+
+Create:
+```bash
+curl -k -X POST "https://localhost:5288/2026-02-04/orders" \
+  -H "Content-Type: application/json" \
+  -d "{\"customerName\":\"Contoso Ltd\",\"orderDateUtc\":\"2026-02-04T08:30:00Z\",\"status\":1,\"totalAmount\":2500.00}"
+```
+
+List:
+```bash
+curl -k "https://localhost:5288/2026-02-04/orders"
+```
+
+Get by id:
+```bash
+curl -k "https://localhost:5288/2026-02-04/orders/{id}"
+```
+
+Update:
+```bash
+curl -k -X PUT "https://localhost:5288/2026-02-04/orders/{id}" \
+  -H "Content-Type: application/json" \
+  -d "{\"customerName\":\"Contoso Ltd\",\"orderDateUtc\":\"2026-02-05T08:30:00Z\",\"status\":2,\"totalAmount\":2600.00}"
+```
+
+Delete:
+```bash
+curl -k -X DELETE "https://localhost:5288/2026-02-04/orders/{id}"
+```
+
+---
+
+## Test the API (Postman)
+
+Base URL (example): `https://localhost:5288`
+
+1. Create a new Collection.
+2. Add requests using the endpoints below.
+3. For POST/PUT, set **Body → raw → JSON** and paste the example payload.
+
+Create (POST):
+- URL: `https://localhost:5288/2026-02-04/orders`
+- Body (JSON):
+```json
+{
+  "customerName": "Contoso Ltd",
+  "orderDateUtc": "2026-02-04T08:30:00Z",
+  "status": 1,
+  "totalAmount": 2500.00
+}
+```
+
+List (GET):
+- URL: `https://localhost:5288/2026-02-04/orders`
+
+Get by id (GET):
+- URL: `https://localhost:5288/2026-02-04/orders/{id}`
+
+Update (PUT):
+- URL: `https://localhost:5288/2026-02-04/orders/{id}`
+- Body (JSON):
+```json
+{
+  "customerName": "Contoso Ltd",
+  "orderDateUtc": "2026-02-05T08:30:00Z",
+  "status": 2,
+  "totalAmount": 2600.00
+}
+```
+
+Delete (DELETE):
+- URL: `https://localhost:5288/2026-02-04/orders/{id}`
+
+---
+
 ## ❌ What This Project Is Not
 
 - ❌ A demo project  
