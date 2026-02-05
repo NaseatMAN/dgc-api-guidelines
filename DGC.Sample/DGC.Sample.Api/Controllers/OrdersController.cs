@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using DGC.Sample.Application.Abstractions.Interfaces;
 using DGC.Sample.Application.Features.Orders.Dtos;
 using Microsoft.AspNetCore.Mvc;
@@ -5,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace DGC.Sample.Api.Controllers;
 
 [ApiController]
-[Route("2026-02-04/orders")]
+[ApiVersion("2026-02-05")]
+[Route("orders")]
 public sealed class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;

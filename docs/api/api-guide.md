@@ -134,13 +134,13 @@ Do not use:
 Base pattern:
 
 ```
-https://api.contoso.gov/v1/customers/{customer-id}/orders
+https://api.contoso.gov/customers/{customer-id}/orders?api-version=2024-10-01
 ```
 
 Recommended layout:
 
-- `https://{apim-host}/{api-base}/{version}/{resource-path}`
-- Example: `https://api.contoso.gov/dgc-api/2024-10-01/customers`
+- `https://{apim-host}/{api-base}/{resource-path}?api-version={version}`
+- Example: `https://api.contoso.gov/dgc-api/customers?api-version=2024-10-01`
 
 Sub-resources:
 
@@ -198,19 +198,19 @@ Response header standards:
 
 ## 9. API versioning strategies
 
-Preferred: date-based versioning in the URL path.
+Preferred: date-based versioning via the `api-version` query parameter.
 
 Examples:
 
-- `/2024-10-01/customers`
-- `/2025-01-15/orders`
+- `/customers?api-version=2024-10-01`
+- `/orders?api-version=2025-01-15`
 
 Rules:
 
 - Only introduce breaking changes in a new version.
 - Keep at least one previous version active during a deprecation window.
 - Document a clear deprecation timeline and migration path.
-- Do not version by query parameter unless mandated by a legacy client.
+- Do not use header-based or path-based versioning unless mandated by a legacy client.
 
 ## 10. API change management and deprecation
 

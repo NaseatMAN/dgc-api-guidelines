@@ -1,3 +1,4 @@
+using Asp.Versioning.ApiExplorer;
 using DGC.Sample.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,15 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.ConfigureOptions<SwaggerGenOptionsSetup>();
 builder.Services.AddDgcSampleServices(builder.Configuration);
+builder.Services.AddCustomApiVersioning();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    app.UseSwaggerConfiguration(provider);
 }
 
 app.UseHttpsRedirection();

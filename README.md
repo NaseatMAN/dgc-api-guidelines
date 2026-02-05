@@ -199,31 +199,31 @@ Base URL (default): `https://localhost:5288`
 
 Create:
 ```bash
-curl -k -X POST "https://localhost:5288/2026-02-04/orders" \
+curl -k -X POST "https://localhost:5288/orders?api-version=2025-05-01" \
   -H "Content-Type: application/json" \
   -d "{\"customerName\":\"Contoso Ltd\",\"orderDateUtc\":\"2026-02-04T08:30:00Z\",\"status\":1,\"totalAmount\":2500.00}"
 ```
 
 List:
 ```bash
-curl -k "https://localhost:5288/2026-02-04/orders"
+curl -k "https://localhost:5288/orders?api-version=2025-05-01"
 ```
 
 Get by id:
 ```bash
-curl -k "https://localhost:5288/2026-02-04/orders/{id}"
+curl -k "https://localhost:5288/orders/{id}?api-version=2025-05-01"
 ```
 
 Update:
 ```bash
-curl -k -X PUT "https://localhost:5288/2026-02-04/orders/{id}" \
+curl -k -X PUT "https://localhost:5288/orders/{id}?api-version=2025-05-01" \
   -H "Content-Type: application/json" \
   -d "{\"customerName\":\"Contoso Ltd\",\"orderDateUtc\":\"2026-02-05T08:30:00Z\",\"status\":2,\"totalAmount\":2600.00}"
 ```
 
 Delete:
 ```bash
-curl -k -X DELETE "https://localhost:5288/2026-02-04/orders/{id}"
+curl -k -X DELETE "https://localhost:5288/orders/{id}?api-version=2025-05-01"
 ```
 
 ---
@@ -237,7 +237,7 @@ Base URL (example): `https://localhost:5288`
 3. For POST/PUT, set **Body → raw → JSON** and paste the example payload.
 
 Create (POST):
-- URL: `https://localhost:5288/2026-02-04/orders`
+- URL: `https://localhost:5288/orders?api-version=2025-05-01`
 - Body (JSON):
 ```json
 {
@@ -249,13 +249,13 @@ Create (POST):
 ```
 
 List (GET):
-- URL: `https://localhost:5288/2026-02-04/orders`
+- URL: `https://localhost:5288/orders?api-version=2025-05-01`
 
 Get by id (GET):
-- URL: `https://localhost:5288/2026-02-04/orders/{id}`
+- URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
 
 Update (PUT):
-- URL: `https://localhost:5288/2026-02-04/orders/{id}`
+- URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
 - Body (JSON):
 ```json
 {
@@ -267,7 +267,7 @@ Update (PUT):
 ```
 
 Delete (DELETE):
-- URL: `https://localhost:5288/2026-02-04/orders/{id}`
+- URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
 
 ---
 
