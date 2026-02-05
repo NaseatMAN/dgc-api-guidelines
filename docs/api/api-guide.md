@@ -303,30 +303,9 @@ Create response:
 
 ## 13. Standard error response (RFC 7807)
 
-Use Problem Details for all error responses.
+Use Problem Details for all error responses to provide a machine-readable format for errors.
 
-Headers:
-
-- `Content-Type: application/problem+json`
-
-Example:
-
-```json
-{
-  "type": "https://api.contoso.gov/problems/validation-error",
-  "title": "Validation failed",
-  "status": 400,
-  "detail": "One or more validation errors occurred.",
-  "instance": "/2024-10-01/customers",
-  "correlationId": "1d2c4f8a3e7b4b1b8a4f42d8d3e7f99b",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Email must be a valid address."
-    }
-  ]
-}
-```
+See the [Standard Error Handling Guide](./error-handling.md) for detailed requirements and .NET implementation examples.
 
 ## 14. Idempotency handling
 
@@ -381,38 +360,11 @@ Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
 Access-Control-Allow-Headers: Authorization, Content-Type, Idempotency-Key
 ```
 
-## 17. Logging, tracing, and correlation ID
+## 17. Observability: Logging, Tracing, and Metrics
 
-Requirements:
+High observability is mandatory for distributed systems. We standardize on OpenTelemetry (OTel) for vendor-neutral collection of signals.
 
-- Accept `x-correlation-id` from clients.
-- If missing, generate a new correlation ID and return it.
-- Log correlation ID on all requests and dependency calls.
-- Emit `traceparent` for W3C distributed tracing.
-
-Example headers:
-
-```
-x-correlation-id: 1d2c4f8a3e7b4b1b8a4f42d8d3e7f99b
-traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
-```
-
-Short ASP.NET Core example:
-
-```csharp
-app.Use(async (context, next) =>
-{
-    const string HeaderName = "x-correlation-id";
-    if (!context.Request.Headers.TryGetValue(HeaderName, out var id))
-    {
-        id = Guid.NewGuid().ToString("N");
-        context.Request.Headers[HeaderName] = id;
-    }
-
-    context.Response.Headers[HeaderName] = id;
-    await next();
-});
-```
+See the [Observability Guide](./observability.md) for principles, .NET configuration, and correlation ID handling.
 
 ## 18. Logging schema and retention
 
