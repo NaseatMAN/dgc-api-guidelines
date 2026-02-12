@@ -14,7 +14,6 @@ builder.Services.AddDgcSampleServices(builder.Configuration);
 builder.Services.AddCustomApiVersioning();
 
 var app = builder.Build();
-app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -23,6 +22,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerConfiguration(provider);
 }
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 
