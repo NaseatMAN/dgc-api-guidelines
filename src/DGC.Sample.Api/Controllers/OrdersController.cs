@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using DGC.Sample.Application.Abstractions.Interfaces;
-using DGC.Sample.Application.Features.Orders.Dtos;
+using DGC.Sample.Application.Dtos;
+using DGC.Sample.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DGC.Sample.Api.Controllers;

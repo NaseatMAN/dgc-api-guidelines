@@ -70,7 +70,7 @@ src/
 │
 ├── ProjectName.Infrastructure
 │   ├── Persistence
-│   │   ├── DbContext
+│   │   ├── Data
 │   │   ├── Configurations
 │   │   └── Migrations
 │   ├── Repositories
