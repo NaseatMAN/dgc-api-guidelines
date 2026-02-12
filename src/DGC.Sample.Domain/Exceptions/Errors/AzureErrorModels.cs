@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DGC.Sample.Api.Errors;
+namespace DGC.Sample.Domain.Exceptions.Errors;
 
 public sealed record AzureErrorResponse(
     [property: JsonPropertyName("error")] AzureError Error);
