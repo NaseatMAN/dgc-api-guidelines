@@ -79,6 +79,7 @@ public abstract class ApiException : Exception
         RetryAfter = retryAfter;
     }
 
+    public string Code { get; }
     public int StatusCode { get; }
     public AzureErrorResponse ResponseBody { get; }
     public int? RetryAfter { get; }

@@ -1,5 +1,5 @@
 using System.Net;
-using DGC.Sample.Domain.Exceptions.Errors;
+using DGC.Sample.Domain.Constants;
 
 namespace DGC.Sample.Domain.Exceptions;
 
