@@ -1,8 +1,7 @@
 using Asp.Versioning;
-using DGC.Sample.Api.Errors;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Services;
-using DGC.Sample.Domain.Constants;
+using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,13 +32,13 @@ public static class ServiceCollectionExtensions
                         .Where(entry => entry.Value?.Errors.Count > 0)
                         .SelectMany(entry => entry.Value!.Errors.Select(error =>
                             new AzureErrorDetail(
-                                Code: ErrorCodes.InvalidField,
+                                Code: $"{BadRequestErrorCode.InvalidModelError}.{entry.Key}",
                                 Message: error.ErrorMessage,
                                 Target: entry.Key)))
                         .ToList();
 
                     var azureError = new AzureError(
-                        Code: ErrorCodes.ValidationFailed,
+                        Code: BadRequestErrorCode.InvalidModelError,
                         Message: "One or more validation errors occurred.",
                         Details: errors,
                         InnerError: new AzureInnerError(TraceId: context.HttpContext.TraceIdentifier));
