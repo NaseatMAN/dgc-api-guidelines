@@ -5,6 +5,9 @@ namespace DGC.Sample.Domain.Exceptions;
 
 public sealed class InternalErrorException : ApiException
 {
+    /// <summary>
+    /// Initializes a new instance of <see cref="InternalErrorException"/> with an Azure error object.
+    /// </summary>
     public InternalErrorException(AzureError error) 
         : base(HttpStatusCode.InternalServerError, error) 
         {
@@ -12,10 +15,56 @@ public sealed class InternalErrorException : ApiException
                 throw new ArgumentException($"Invalid error code for InternalErrorException: {error.Code}");
         }
 
-    public InternalErrorException(string code, string message) 
-        : base(HttpStatusCode.InternalServerError, code, message) 
+    /// <summary>
+    /// Initializes a new instance of <see cref="InternalErrorException"/> with detailed error information.
+    /// </summary>
+    public InternalErrorException(
+        string code,
+        string message,
+        string? target = null,
+        IReadOnlyList<AzureErrorDetail>? azureErrorDetails = null,
+        AzureInnerError? azureInnerError = null,
+        int? retryAfter = null) 
+        : base(HttpStatusCode.InternalServerError, code, message, target, azureErrorDetails, azureInnerError, retryAfter) 
         {
             if (InternalErrorCode.IsValidCode(code) is false)
                 throw new ArgumentException($"Invalid error code for InternalErrorException: {code}");
         }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="InternalErrorException"/> with error details as a dictionary.
+    /// </summary>
+    public InternalErrorException(
+        string code,
+        string message,
+        string? target = null,
+        IDictionary<string, string>? errorDetails = null,
+        AzureInnerError? azureInnerError = null,
+        int? retryAfter = null)
+        : base(HttpStatusCode.InternalServerError, code, message, target, errorDetails, azureInnerError, retryAfter)
+    {
+        if (InternalErrorCode.IsValidCode(code) is false)
+            throw new ArgumentException($"Invalid error code for InternalErrorException: {code}");
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="InternalErrorException"/> with error details and inner error information.
+    /// </summary>
+    /// <remarks>
+    /// This is the preferred constructor for creating InternalErrorException instances.
+    /// Use this constructor when you need to provide error details and inner error information using simple types.
+    /// </remarks>
+    public InternalErrorException(
+        string code,
+        string message,
+        string? target = null,
+        IDictionary<string, string>? errorDetails = null,
+        string? innerCode = null,
+        string? innerMessage = null,
+        int? retryAfter = null)
+        : base(HttpStatusCode.InternalServerError, code, message, target, errorDetails, innerCode, innerMessage, retryAfter)
+    {
+        if (InternalErrorCode.IsValidCode(code) is false)
+            throw new ArgumentException($"Invalid error code for InternalErrorException: {code}");
+    }
 }
