@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Constants.ApiErrorConstants;
@@ -26,6 +27,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddProblemDetails();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, AzureProblemDetailsWriter>());
+        services.AddScoped<IdempotencyFilter>();
 
         services
             .AddControllers()
