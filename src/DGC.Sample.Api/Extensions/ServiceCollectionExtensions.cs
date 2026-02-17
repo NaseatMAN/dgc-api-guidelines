@@ -1,9 +1,11 @@
 using Asp.Versioning;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Services;
+using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DGC.Sample.Api.Extensions;
 
@@ -22,6 +24,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApiControllersWithAzureValidation(
         this IServiceCollection services)
     {
+        services.AddProblemDetails();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, AzureProblemDetailsWriter>());
+
         services
             .AddControllers()
             .ConfigureApiBehaviorOptions(options =>
@@ -60,7 +65,8 @@ public static class ServiceCollectionExtensions
             options.ApiVersionReader = new QueryStringApiVersionReader("api-version");
             options.ReportApiVersions = true;
             options.UnsupportedApiVersionStatusCode = StatusCodes.Status400BadRequest;
-        }).AddApiExplorer(options =>
+        })
+        .AddApiExplorer(options =>
         {
             options.GroupNameFormat = "yyyy-MM-dd";
             options.SubstituteApiVersionInUrl = true;

@@ -14,6 +14,8 @@ builder.Services.AddDgcSampleServices(builder.Configuration);
 builder.Services.AddCustomApiVersioning();
 
 var app = builder.Build();
+
+app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
