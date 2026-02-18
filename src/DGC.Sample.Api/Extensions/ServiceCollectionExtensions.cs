@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddProblemDetails();
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, AzureProblemDetailsWriter>());
+        services.AddSingleton<IProblemDetailsWriter, AzureProblemDetailsWriter>();
 
         services
             .AddControllers()

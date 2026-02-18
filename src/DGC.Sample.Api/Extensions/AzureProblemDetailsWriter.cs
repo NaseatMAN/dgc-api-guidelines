@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using System.Text.Json;
@@ -23,17 +21,21 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
 
         // Map ProblemDetails to AzureError
         var errorCode = problem.Extensions.TryGetValue("code", out var code) && code is string s ? s : null;
-        
+
         if (string.IsNullOrEmpty(errorCode))
         {
             // Try to extract code from type URL if it's a versioning error
-            if (problem.Type != null && problem.Type.Contains("aspnet-api-versioning"))
+            // New format: https://docs.api-versioning.org/problems#unspecified
+            if (problem.Type != null && (problem.Type.Contains("api-versioning") || problem.Type.Contains("aspnet-api-versioning")))
             {
-                errorCode = problem.Type.Split('#').LastOrDefault() switch
+                var typeFragment = problem.Type.Split('#').LastOrDefault();
+                errorCode = typeFragment switch
                 {
+                    "unspecified" => VersioningErrorCode.MissingApiVersionParameter,
                     "apiVersionUnspecified" => VersioningErrorCode.MissingApiVersionParameter,
+                    "unsupported" => VersioningErrorCode.UnsupportedApiVersionValue,
                     "unsupportedApiVersion" => VersioningErrorCode.UnsupportedApiVersionValue,
-                    _ => problem.Type.Split('#').LastOrDefault()
+                    _ => typeFragment
                 };
             }
             else
@@ -64,7 +66,7 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
 
         // Ensure x-ms-error-code header is set
         httpContext.Response.Headers["x-ms-error-code"] = azureError.Code;
-        
+
         // We don't set status code here because it's already set by the caller of IProblemDetailsWriter usually.
         // But let's be safe.
         httpContext.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
