@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration)
     {
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddInfrastructure(configuration);
 
         // Register FluentValidation
