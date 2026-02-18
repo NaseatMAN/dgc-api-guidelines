@@ -7,6 +7,6 @@ public interface IOrderService
     Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken);
     Task<OrderResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<OrderResponse> CreateAsync(OrderCreateRequest request, CancellationToken cancellationToken);
-    Task<OrderResponse?> UpdateAsync(Guid id, OrderUpdateRequest request, CancellationToken cancellationToken);
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
+    Task<(OrderResponse Response, bool Created)> UpsertAsync(Guid id, OrderUpdateRequest request, CancellationToken cancellationToken);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 }
