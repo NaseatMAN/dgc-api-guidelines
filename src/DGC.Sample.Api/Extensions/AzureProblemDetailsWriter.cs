@@ -54,15 +54,27 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
         else if (errorCode == VersioningErrorCode.UnsupportedApiVersionValue)
         {
             // For unsupported version, try to get the requested version if available
-            var requestedVersion = problem.Extensions.TryGetValue("apiVersion", out var v) ? v?.ToString() : "unknown";
+            var requestedVersion = problem.Extensions.TryGetValue("apiVersion", out var v) ? v?.ToString() : null;
+
+            if (string.IsNullOrEmpty(requestedVersion))
+            {
+                // Fallback to query string
+                requestedVersion = httpContext.Request.Query["api-version"].ToString();
+            }
+
+            if (string.IsNullOrEmpty(requestedVersion))
+            {
+                requestedVersion = "unknown";
+            }
+
             message = $"Unsupported api-version '{requestedVersion}'.";
         }
 
         var azureError = new AzureError(
-            Code: errorCode!,
-            Message: message,
-            Target: problem.Instance,
-            InnerError: new AzureInnerError(TraceId: httpContext.TraceIdentifier));
+        Code: errorCode!,
+        Message: message,
+        Target: problem.Instance,
+        InnerError: new AzureInnerError(TraceId: httpContext.TraceIdentifier));
 
         // Ensure x-ms-error-code header is set
         httpContext.Response.Headers["x-ms-error-code"] = azureError.Code;
