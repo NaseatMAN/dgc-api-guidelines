@@ -1,11 +1,11 @@
 using Asp.Versioning;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Services;
-using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 namespace DGC.Sample.Api.Extensions;
 
@@ -17,6 +17,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IOrderService, OrderService>();
         services.AddInfrastructure(configuration);
+
+        // Register FluentValidation
+        services.AddValidatorsFromAssemblyContaining<IOrderService>();
+        services.AddFluentValidationAutoValidation();
 
         return services;
     }
