@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,7 @@ public sealed class OrdersController : ControllerBase
     }
 
     [HttpPost]
+    [ServiceFilter(typeof(IdempotencyFilter))]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] OrderCreateRequest request, CancellationToken cancellationToken)
     {
@@ -43,20 +45,22 @@ public sealed class OrdersController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [ServiceFilter(typeof(IdempotencyFilter))]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Update(Guid id, [FromBody] OrderUpdateRequest request, CancellationToken cancellationToken)
     {
-        var updated = await _orderService.UpdateAsync(id, request, cancellationToken);
-        return updated is null ? NotFound() : Ok(updated);
+        var (response, created) = await _orderService.UpsertAsync(id, request, cancellationToken);
+        return created 
+            ? CreatedAtAction(nameof(GetById), new { id = response.Id }, response) 
+            : Ok(response);
     }
 
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await _orderService.DeleteAsync(id, cancellationToken);
-        return deleted ? NoContent() : NotFound();
+        await _orderService.DeleteAsync(id, cancellationToken);
+        return NoContent();
     }
 }
