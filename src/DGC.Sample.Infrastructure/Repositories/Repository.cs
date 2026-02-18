@@ -16,12 +16,12 @@ namespace DGC.Sample.Infrastructure.Repositories
             dbSet = context.Set<TEntity>();
         }
 
-        public virtual async Task<bool> AnyAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<bool> AnyAsync(CancellationToken cancellationToken)
         {
-            return await AnyAsync(x => true, cancellationToken);
+            return await AnyAsync(null, cancellationToken);
         }
 
-        public virtual async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> expression, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? expression, CancellationToken cancellationToken)
         {
             var criteria = MergeWithCriteriaBase(expression);
             if (criteria == null)
@@ -34,12 +34,12 @@ namespace DGC.Sample.Infrastructure.Repositories
             }
         }
 
-        public virtual async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<int> CountAsync(CancellationToken cancellationToken)
         {
-            return await CountAsync(x => true, cancellationToken);
+            return await CountAsync(null, cancellationToken);
         }
 
-        public virtual async Task<int> CountAsync(Expression<Func<TEntity, bool>> expression, CancellationToken cancellationToken = default)
+        public virtual async Task<int> CountAsync(Expression<Func<TEntity, bool>>? expression, CancellationToken cancellationToken)
         {
             var criteria = MergeWithCriteriaBase(expression);
             if (criteria == null)
@@ -52,19 +52,19 @@ namespace DGC.Sample.Infrastructure.Repositories
             }
         }
 
-        public virtual async Task<TEntity> FindObjectAsync(
+        public virtual async Task<TEntity?> FindObjectAsync(
             Expression<Func<TEntity, bool>> expression,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             return await FindObjectAsync(expression, null, cancellationToken);
         }
 
         public virtual async Task<TEntity?> FindObjectAsync(
             Expression<Func<TEntity, bool>> expression,
-            Func<IQueryable<TEntity>, IQueryable<TEntity>> include,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include,
             CancellationToken cancellationToken)
         {
-            var query = IncludeProperties(dbSet.AsQueryable(), include);
+            var query = IncludeProperties(Query(), include);
             var criteria = MergeWithCriteriaBase(expression);
             if (criteria == null)
             {
@@ -76,21 +76,21 @@ namespace DGC.Sample.Infrastructure.Repositories
             }
         }
 
-        public virtual async Task<TEntity> FindObjectByKeyAsync(
+        public virtual async Task<TEntity?> FindObjectByKeyAsync(
             object key,
             CancellationToken cancellationToken)
         {
             return await FindObjectByKeyAsync(key, null, cancellationToken);
         }
 
-        public virtual async Task<TEntity> FindObjectByKeyAsync(
+        public virtual async Task<TEntity?> FindObjectByKeyAsync(
             object key,
-            Func<IQueryable<TEntity>, IQueryable<TEntity>> include,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(key);
 
-            var query = IncludeProperties(dbSet.AsQueryable(), include);
+            var query = IncludeProperties(Query(), include);
 
             // Build a dynamic expression to find by key
             // This assumes the entity has a property named "Id" or uses a single primary key
@@ -124,36 +124,36 @@ namespace DGC.Sample.Infrastructure.Repositories
             var lambda = Expression.Lambda<Func<TEntity, bool>>(equalsExpression, parameter);
 
             // Merge with security criteria
-            var criteria = MergeWithCriteriaBase(lambda);
+            var criteria = MergeWithCriteriaBase(lambda) ?? (x => true);
 
-            return await query.FirstOrDefaultAsync(criteria!, cancellationToken) ?? default!;
+            return await query.FirstOrDefaultAsync(criteria, cancellationToken);
         }
 
         public virtual IQueryable<TEntity> GetObjectsAsync(
-            Expression<Func<TEntity, bool>>? expression = null,
-            CancellationToken cancellationToken = default)
+            Expression<Func<TEntity, bool>>? expression,
+            CancellationToken cancellationToken)
         {
             return GetObjectsAsync(expression, null, null, cancellationToken);
         }
 
         public virtual IQueryable<TEntity> GetObjectsAsync(
-            Expression<Func<TEntity, bool>> expression,
-            Func<IQueryable<TEntity>, IQueryable<TEntity>> include,
+            Expression<Func<TEntity, bool>>? expression,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include,
             CancellationToken cancellationToken)
         {
             return GetObjectsAsync(expression, null, include, cancellationToken);
         }
 
         public virtual IQueryable<TEntity> GetObjectsAsync(
-            Expression<Func<TEntity, bool>> expression,
-            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy,
-            Func<IQueryable<TEntity>, IQueryable<TEntity>> include,
-            CancellationToken cancellationToken = default)
+            Expression<Func<TEntity, bool>>? expression,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include,
+            CancellationToken cancellationToken)
         {
             var criteria = MergeWithCriteriaBase(expression);
 
             // Start with the base query
-            IQueryable<TEntity> query = dbSet.AsNoTracking();
+            IQueryable<TEntity> query = QueryAsNoTracking();
 
             // Apply includes
             query = IncludeProperties(query, include);
