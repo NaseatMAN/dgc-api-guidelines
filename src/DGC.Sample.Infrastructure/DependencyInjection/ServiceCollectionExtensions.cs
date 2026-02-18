@@ -1,4 +1,5 @@
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Infrastructure.Persistence;
 using DGC.Sample.Infrastructure.Persistence.Data;
 using DGC.Sample.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IIdempotencyService, IdempotencyService>();
 
         return services;
     }

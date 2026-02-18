@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Exceptions.Errors;
@@ -6,6 +7,7 @@ using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DGC.Sample.Api.Extensions;
 
@@ -30,7 +32,8 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddProblemDetails();
-        services.AddSingleton<IProblemDetailsWriter, AzureProblemDetailsWriter>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, AzureProblemDetailsWriter>());
+        services.AddScoped<IdempotencyFilter>();
 
         services
             .AddControllers()

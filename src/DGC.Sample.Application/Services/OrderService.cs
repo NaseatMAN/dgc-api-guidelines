@@ -33,12 +33,20 @@ public sealed class OrderService : IOrderService
         return OrderMapper.ToResponse(order);
     }
 
-    public async Task<OrderResponse?> UpdateAsync(Guid id, OrderUpdateRequest request, CancellationToken cancellationToken)
+    public async Task<(OrderResponse Response, bool Created)> UpsertAsync(Guid id, OrderUpdateRequest request, CancellationToken cancellationToken)
     {
         var existing = await _orderRepository.GetByIdAsync(id, cancellationToken);
         if (existing is null)
         {
-            return null;
+            var newOrder = OrderMapper.ToEntity(id, new OrderCreateRequest
+            {
+                CustomerName = request.CustomerName,
+                OrderDateUtc = request.OrderDateUtc,
+                Status = request.Status,
+                TotalAmount = request.TotalAmount
+            });
+            await _orderRepository.AddAsync(newOrder, cancellationToken);
+            return (OrderMapper.ToResponse(newOrder), true);
         }
 
         existing.CustomerName = request.CustomerName;
@@ -47,18 +55,11 @@ public sealed class OrderService : IOrderService
         existing.TotalAmount = request.TotalAmount;
 
         await _orderRepository.UpdateAsync(existing, cancellationToken);
-        return OrderMapper.ToResponse(existing);
+        return (OrderMapper.ToResponse(existing), false);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await _orderRepository.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-        {
-            return false;
-        }
-
         await _orderRepository.DeleteAsync(id, cancellationToken);
-        return true;
     }
 }
