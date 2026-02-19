@@ -10,9 +10,11 @@ namespace DGC.Sample.Infrastructure.Repositories
         where TEntity : class
     {
         protected DbSet<TEntity> dbSet { get; }
+        protected AppDbContext context { get; }
 
         public Repository(AppDbContext context)
         {
+            this.context = context;
             dbSet = context.Set<TEntity>();
         }
 
@@ -90,43 +92,85 @@ namespace DGC.Sample.Infrastructure.Repositories
         {
             ArgumentNullException.ThrowIfNull(key);
 
-            var query = IncludeProperties(Query(), include);
-
-            // Build a dynamic expression to find by key
-            // This assumes the entity has a property named "Id" or uses a single primary key
+            var entityType = context.Model.FindEntityType(typeof(TEntity)) ?? throw new InvalidOperationException($"Entity type {typeof(TEntity).Name} is not found in the model.");
+            var primaryKey = entityType.FindPrimaryKey() ?? throw new InvalidOperationException($"Entity type {typeof(TEntity).Name} has no primary key defined.");
+            var keyProperties = primaryKey.Properties;
             var parameter = Expression.Parameter(typeof(TEntity), "e");
-            // Try common primary key property names
-            var propertyNames = new[] { "Id", $"{typeof(TEntity).Name}Id" };
-            PropertyInfo keyProperty = null!;
-            foreach (var propName in propertyNames)
+            Expression? predicate = null;
+
+            if (keyProperties.Count == 1)
             {
-                keyProperty = typeof(TEntity).GetProperty(propName)!;
-                if (keyProperty != null)
-                    break;
+                var property = keyProperties[0];
+                var propertyAccess = Expression.Property(parameter, property.PropertyInfo!);
+
+                // Build expression: e => e.KeyProperty.Equals(key)
+                var convertedKeyValue = ConvertKey(key, property.ClrType);
+                var keyConstant = Expression.Constant(convertedKeyValue, property.ClrType);
+                predicate = Expression.Equal(propertyAccess, keyConstant);
+            }
+            else
+            {
+                // Composite key support: key can be an object with matching property names,
+                // IDictionary<string, object>, or object[] (matched by index)
+
+                for (int i = 0; i < keyProperties.Count; i++)
+                {
+                    var property = keyProperties[i];
+                    object? keyValue = null;
+
+                    if (key is System.Collections.IDictionary dict)
+                    {
+                        keyValue = dict[property.Name];
+                    }
+                    else if (key is object[] objects && objects.Length == keyProperties.Count)
+                    {
+                        keyValue = objects[i];
+                    }
+                    else
+                    {
+                        keyValue = key.GetType().GetProperty(property.Name)?.GetValue(key);
+                    }
+
+                    if (keyValue == null)
+                        throw new ArgumentException($"Value for key property '{property.Name}' was not found in the provided key.");
+
+                    var propertyAccess = Expression.Property(parameter, property.PropertyInfo!);
+                    var convertedKeyValue = ConvertKey(keyValue, property.ClrType);
+                    var keyConstant = Expression.Constant(convertedKeyValue, property.ClrType);
+                    var equals = Expression.Equal(propertyAccess, keyConstant);
+
+                    predicate = predicate == null ? equals : Expression.AndAlso(predicate, equals);
+                }
             }
 
-            if (keyProperty == null)
-            {
-                // Fallback: get the first property if no standard key found
-                keyProperty = typeof(TEntity).GetProperties()
-                    .FirstOrDefault(p => p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))!;
-            }
-
-            if (keyProperty == null)
-                throw new InvalidOperationException($"Cannot find a primary key property for entity type {typeof(TEntity).Name}");
-
-            // Build expression: e => e.KeyProperty.Equals(key)
-            var propertyAccess = Expression.Property(parameter, keyProperty);
-            var keyConstant = Expression.Constant(key);
-            // Convert key to property type if necessary
-            var convertedKey = Expression.Convert(keyConstant, keyProperty.PropertyType);
-            var equalsExpression = Expression.Equal(propertyAccess, convertedKey);
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(equalsExpression, parameter);
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(predicate!, parameter);
 
             // Merge with security criteria
+            var query = IncludeProperties(Query(), include);
             var criteria = MergeWithCriteriaBase(lambda) ?? (x => true);
 
             return await query.FirstOrDefaultAsync(criteria, cancellationToken);
+        }
+
+        private static object? ConvertKey(object? value, Type targetType)
+        {
+            if (value == null) return null;
+            if (targetType.IsAssignableFrom(value.GetType())) return value;
+
+            try
+            {
+                var converter = System.ComponentModel.TypeDescriptor.GetConverter(targetType);
+                if (converter.CanConvertFrom(value.GetType()))
+                {
+                    return converter.ConvertFrom(value);
+                }
+                return Convert.ChangeType(value, targetType);
+            }
+            catch
+            {
+                // Fallback to original value, let EF handle it or fail later
+                return value;
+            }
         }
 
         public virtual IQueryable<TEntity> GetObjectsAsync(

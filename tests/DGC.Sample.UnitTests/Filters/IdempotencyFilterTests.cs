@@ -1,7 +1,7 @@
 using System.Text.Json;
 using DGC.Sample.Api.Filters;
-using DGC.Sample.Domain.Entities;
-using DGC.Sample.Infrastructure.Persistence;
+using DGC.Sample.Application.Dtos;
+using DGC.Sample.Application.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -49,13 +49,7 @@ public sealed class IdempotencyFilterTests
         // Arrange
         var key = "test-key";
         var context = CreateActionExecutingContext(key);
-        var cachedResponse = new IdempotentRequest
-        {
-            IdempotencyKey = key,
-            RequestPath = "/test",
-            StatusCode = 201,
-            ResponseBody = "{\"id\": 1}"
-        };
+        var cachedResponse = new IdempotencyResult(201, "{\"id\": 1}");
 
         _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
             .Returns(cachedResponse);
@@ -87,7 +81,10 @@ public sealed class IdempotencyFilterTests
         };
 
         _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
-            .Returns((IdempotentRequest?)null);
+            .Returns((IdempotencyResult?)null);
+            
+        _idempotencyService.TryStartRequestAsync(key, Arg.Any<CancellationToken>())
+            .Returns(true);
 
         ActionExecutionDelegate next = () => Task.FromResult(actionExecutedContext);
 
@@ -97,7 +94,6 @@ public sealed class IdempotencyFilterTests
         // Assert
         await _idempotencyService.Received(1).SaveRequestAsync(
             key,
-            Arg.Any<string>(),
             200,
             Arg.Is<string>(s => s.Contains("\"id\":1")),
             Arg.Any<CancellationToken>());
