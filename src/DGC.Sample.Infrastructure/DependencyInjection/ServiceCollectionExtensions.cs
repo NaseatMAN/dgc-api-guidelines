@@ -1,5 +1,7 @@
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Notifications;
 using DGC.Sample.Application.Queue;
+using DGC.Sample.Infrastructure.ExternalServices.Notifications;
 using DGC.Sample.Application.Queue.Exceptions;
 using DGC.Sample.Infrastructure.Persistence;
 using DGC.Sample.Infrastructure.Persistence.Data;
@@ -26,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IIdempotencyService, IdempotencyService>();
+        services.AddNotificationServices(configuration);
 
         services.AddQueueServices(configuration);
 
@@ -70,6 +73,26 @@ public static class ServiceCollectionExtensions
 
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton(typeof(IMessageQueueTransport<>), typeof(RedisMessageQueueTransport<>)));
+
+        return services;
+    }
+
+    public static IServiceCollection AddNotificationServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        var emailSettings = configuration
+            .GetSection(EmailNotificationSettings.SectionName)
+            .Get<EmailNotificationSettings>()
+            ?? new EmailNotificationSettings();
+
+        var telegramSettings = configuration
+            .GetSection(TelegramNotificationSettings.SectionName)
+            .Get<TelegramNotificationSettings>()
+            ?? new TelegramNotificationSettings();
+
+        services.TryAddSingleton(emailSettings);
+        services.TryAddSingleton(telegramSettings);
+        services.TryAddScoped<IEmailSender, SmtpEmailSender>();
+        services.TryAddScoped<ITelegramSender, TelegramSender>();
 
         return services;
     }
