@@ -1,5 +1,6 @@
 using System.Net;
 using DGC.Sample.Domain.Exceptions.Errors;
+using DGC.Sample.Domain.Constants.ApiErrorConstants;
 
 namespace DGC.Sample.Domain.Exceptions;
 

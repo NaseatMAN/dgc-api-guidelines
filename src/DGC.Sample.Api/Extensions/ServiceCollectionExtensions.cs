@@ -7,6 +7,7 @@ using DGC.Sample.Application.Queue.Workers;
 using DGC.Sample.Application.Queue.Workers.Handlers;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Exceptions.Errors;
+using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
