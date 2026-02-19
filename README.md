@@ -180,7 +180,7 @@ Testing is **mandatory**.
 
 ## PostgreSQL setup (sample CRUD)
 
-1. Ensure PostgreSQL is running and update the connection string in `DGC.Sample.Api/appsettings.json` if needed.
+1. Ensure PostgreSQL is running.
 2. Add EF Core tools:
    - Package Manager Console (VS): `Install-Package Microsoft.EntityFrameworkCore.Design -Project DGC.Sample.Infrastructure`
    - CLI: `dotnet tool install --global dotnet-ef --version 10.0.0`
@@ -190,6 +190,23 @@ Testing is **mandatory**.
 4. Apply the migration:
    - PMC: `Update-Database -Project DGC.Sample.Infrastructure -StartupProject DGC.Sample.Api`
    - CLI: `dotnet ef database update --project DGC.Sample.Infrastructure --startup-project DGC.Sample.Api`
+
+### Local secrets (User Secrets)
+
+Sensitive settings are stored in .NET User Secrets for local development instead of committed `appsettings*.json` files.
+
+Current keys moved to User Secrets:
+- `ConnectionStrings:DefaultConnection`
+- `ConnectionStrings:Redis`
+
+Set mock values from command line:
+
+```bash
+cd src/DGC.Sample.Api
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
+dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379,abortConnect=false"
+dotnet user-secrets list
+```
 
 ---
 

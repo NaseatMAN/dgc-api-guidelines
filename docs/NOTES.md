@@ -23,10 +23,12 @@
 - DI: `src/DGC.Sample.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`.
 
 ### Configuration
-- Connection string in:
+- Non-sensitive defaults live in:
   - `src/DGC.Sample.Api/appsettings.json`
   - `src/DGC.Sample.Api/appsettings.Development.json`
-- Current value uses DB `AmanahPortal`, user `postgres`, password `Adm1n@12345`.
+- Sensitive values are stored in User Secrets (local only):
+  - `ConnectionStrings:DefaultConnection`
+  - `ConnectionStrings:Redis`
 
 ### Tooling
 - EF Core packages pinned to `10.0.0`.
@@ -37,3 +39,13 @@
 
 ### Known items to check next time
 - Swagger UI should be at `/swagger` when running in Development.
+
+### Secrets checklist (do not regress)
+- Keep `src/DGC.Sample.Api/appsettings.json` and `src/DGC.Sample.Api/appsettings.Development.json` tracked by git.
+- Keep real credentials out of `appsettings*.json`.
+- Use User Secrets for local sensitive values.
+- Mock setup commands:
+  - `cd src/DGC.Sample.Api`
+  - `dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"`
+  - `dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379,abortConnect=false"`
+  - `dotnet user-secrets list`

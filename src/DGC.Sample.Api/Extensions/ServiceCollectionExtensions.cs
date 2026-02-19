@@ -1,6 +1,10 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Queue;
+using DGC.Sample.Application.Queue.Messages;
+using DGC.Sample.Application.Queue.Workers;
+using DGC.Sample.Application.Queue.Workers.Handlers;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Infrastructure.DependencyInjection;
@@ -20,6 +24,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IUserService, UserService>();
         services.AddInfrastructure(configuration);
+        services.AddScoped<IMessageHandler<OrderCreatedMessage>, OrderCreatedMessageHandler>();
+        services.AddHostedService<BackgroundOrderCreatedWorker>();
+
+        var redisConnection = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            services.AddHostedService<BackgroundOrderCreatedRedisWorker>();
+        }
 
         // Register FluentValidation
         services.AddValidatorsFromAssemblyContaining<IOrderService>();

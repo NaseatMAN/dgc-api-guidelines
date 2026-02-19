@@ -2,6 +2,8 @@ using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Queue;
+using DGC.Sample.Application.Queue.Messages;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DGC.Sample.Api.Controllers;
@@ -12,10 +14,12 @@ namespace DGC.Sample.Api.Controllers;
 public sealed class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;
+    private readonly IQueueService _queueService;
 
-    public OrdersController(IOrderService orderService)
+    public OrdersController(IOrderService orderService, IQueueService queueService)
     {
         _orderService = orderService;
+        _queueService = queueService;
     }
 
     [HttpGet]
@@ -41,6 +45,15 @@ public sealed class OrdersController : ControllerBase
     public async Task<IActionResult> Create([FromBody] OrderCreateRequest request, CancellationToken cancellationToken)
     {
         var created = await _orderService.CreateAsync(request, cancellationToken);
+
+        var message = new OrderCreatedMessage(
+            created.Id,
+            created.CustomerName,
+            created.TotalAmount,
+            DateTimeOffset.UtcNow);
+
+        await _queueService.EnqueueAsync(message, cancellationToken: cancellationToken);
+
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
