@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DGC.Sample.Application.Queue.Workers;
 
-public sealed class BackgroundOrderCreatedWorker(
+public sealed class BackgroundOrderCreatedRedisWorker(
     IServiceScopeFactory scopeFactory,
     ITransportResolver<OrderCreatedMessage> transportResolver,
     ILogger<MessageProcessingServiceBase<OrderCreatedMessage>> logger)
@@ -14,9 +14,9 @@ public sealed class BackgroundOrderCreatedWorker(
         transportResolver,
         logger)
 {
-    protected override string WorkerName => "BackgroundOrderCreated";
+    protected override string WorkerName => "BackgroundOrderCreatedRedis";
 
-    protected override QueueTransport Transport => QueueTransport.InMemory;
+    protected override QueueTransport Transport => QueueTransport.Redis;
 
     protected override async Task ProcessMessageAsync(
         IServiceProvider serviceProvider,

@@ -4,11 +4,11 @@ public interface IQueueService
 {
     Task EnqueueAsync<T>(
         T item,
-        QueueTransport transport = QueueTransport.InMemory,
+        QueueTransport? transport = null,
         CancellationToken cancellationToken = default);
 
     Task<T?> DequeueAsync<T>(
-        QueueTransport transport = QueueTransport.InMemory,
+        QueueTransport? transport = null,
         CancellationToken cancellationToken = default)
         where T : class;
 }

@@ -25,6 +25,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMessageHandler<OrderCreatedMessage>, OrderCreatedMessageHandler>();
         services.AddHostedService<BackgroundOrderCreatedWorker>();
 
+        var redisConnection = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            services.AddHostedService<BackgroundOrderCreatedRedisWorker>();
+        }
+
         return services;
     }
 

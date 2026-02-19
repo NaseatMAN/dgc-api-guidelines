@@ -13,6 +13,7 @@ public sealed class QueueServiceTests
     public async Task EnqueueAndDequeue_ShouldUseConfiguredTransport()
     {
         var services = new ServiceCollection();
+        services.AddSingleton(new QueueServiceOptions { DefaultTransport = QueueTransport.InMemory });
         services.AddSingleton<IMessageQueueTransport<TestMessage>, InMemoryMessageQueueTransport<TestMessage>>();
         services.AddSingleton<ITransportResolver<TestMessage>, TransportResolver<TestMessage>>();
         services.AddSingleton<IQueueService, QueueService>();

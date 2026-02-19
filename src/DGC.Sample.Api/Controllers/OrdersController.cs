@@ -52,7 +52,7 @@ public sealed class OrdersController : ControllerBase
             created.TotalAmount,
             DateTimeOffset.UtcNow);
 
-        await _queueService.EnqueueAsync(message, QueueTransport.InMemory, cancellationToken);
+        await _queueService.EnqueueAsync(message, cancellationToken: cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }

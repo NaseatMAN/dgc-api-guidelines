@@ -396,8 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-# Ignore app settings files
-appsettings*.json
 .DS_Store
 # Ignore logs folder
 logs/

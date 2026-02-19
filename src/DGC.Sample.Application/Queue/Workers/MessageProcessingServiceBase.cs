@@ -5,12 +5,18 @@ using Microsoft.Extensions.Configuration;
 
 namespace DGC.Sample.Application.Queue.Workers;
 
-public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scopeFactory, ILogger<MessageProcessingServiceBase<T>> logger) : BackgroundService
+public abstract class MessageProcessingServiceBase<T>(
+    IServiceScopeFactory scopeFactory,
+    ITransportResolver<T> transportResolver,
+    ILogger<MessageProcessingServiceBase<T>> logger) : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
+    private readonly ITransportResolver<T> _transportResolver = transportResolver;
     private readonly ILogger _logger = logger;
 
     protected abstract string WorkerName { get; }
+
+    protected abstract QueueTransport Transport { get; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -23,10 +29,12 @@ public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scope
 
         using var semaphore = new SemaphoreSlim(maxParallelism, maxParallelism);
         var inFlight = new HashSet<Task>();
+        var transport = _transportResolver.Resolve(Transport);
 
         _logger.LogInformation(
-            "Worker {WorkerName} started with pollInterval={PollIntervalSeconds}s maxParallelism={MaxParallelism}",
+            "Worker {WorkerName} started with transport={Transport} pollInterval={PollIntervalSeconds}s maxParallelism={MaxParallelism}",
             WorkerName,
+            Transport,
             pollIntervalSeconds,
             maxParallelism);
 
@@ -36,7 +44,6 @@ public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scope
 
             using (var scope = _scopeFactory.CreateScope())
             {
-                var transport = scope.ServiceProvider.GetRequiredService<IMessageQueueTransport<T>>();
                 envelope = await transport.DequeueAsync(pollIntervalSeconds * 1000, stoppingToken).ConfigureAwait(false);
             }
 
@@ -48,7 +55,7 @@ public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scope
 
             await semaphore.WaitAsync(stoppingToken).ConfigureAwait(false);
 
-            var processingTask = ProcessEnvelopeAsync(envelope, semaphore, stoppingToken);
+            var processingTask = ProcessEnvelopeAsync(envelope, transport, semaphore, stoppingToken);
 
             lock (inFlight)
             {
@@ -76,12 +83,15 @@ public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scope
         }
     }
 
-    private async Task ProcessEnvelopeAsync(Envelope<T> envelope, SemaphoreSlim semaphore, CancellationToken stoppingToken)
+    private async Task ProcessEnvelopeAsync(
+        Envelope<T> envelope,
+        IMessageQueueTransport<T> transport,
+        SemaphoreSlim semaphore,
+        CancellationToken stoppingToken)
     {
         try
         {
             using var scope = _scopeFactory.CreateScope();
-            var transport = scope.ServiceProvider.GetRequiredService<IMessageQueueTransport<T>>();
             var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
             var retryLimit = configuration.GetValue<int?>("Queue:Retry:Limit") ?? 10;

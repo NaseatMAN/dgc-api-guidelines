@@ -26,15 +26,32 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IIdempotencyService, IdempotencyService>();
 
-        services.AddQueueServices();
+        services.AddQueueServices(configuration);
 
         return services;
     }
 
-    public static IServiceCollection AddQueueServices(this IServiceCollection services)
+    public static IServiceCollection AddQueueServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var defaultTransportRaw = configuration["Queue:DefaultTransport"];
+        var defaultTransport = Enum.TryParse<QueueTransport>(defaultTransportRaw, true, out var parsedTransport)
+            ? parsedTransport
+            : QueueTransport.InMemory;
+
+        services.TryAddSingleton(new QueueServiceOptions
+        {
+            DefaultTransport = defaultTransport
+        });
+
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton(typeof(IMessageQueueTransport<>), typeof(InMemoryMessageQueueTransport<>)));
+
+        var redisConnection = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            services.TryAddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+            services.AddRedisMessageTransport();
+        }
 
         services.TryAddSingleton(typeof(ITransportResolver<>), typeof(TransportResolver<>));
         services.TryAddSingleton<IQueueService, QueueService>();
