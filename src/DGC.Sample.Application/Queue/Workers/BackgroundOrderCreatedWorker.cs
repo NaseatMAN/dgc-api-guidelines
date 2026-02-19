@@ -1,7 +1,8 @@
-using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace DGC.Sample.Api.Workers;
+namespace DGC.Sample.Application.Queue.Workers;
 
 public sealed class BackgroundOrderCreatedWorker(IServiceScopeFactory scopeFactory, ILogger<MessageProcessingServiceBase<OrderCreatedMessage>> logger)
     : MessageProcessingServiceBase<OrderCreatedMessage>(scopeFactory, logger)

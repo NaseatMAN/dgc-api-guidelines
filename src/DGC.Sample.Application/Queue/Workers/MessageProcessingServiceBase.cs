@@ -1,6 +1,9 @@
-using DGC.Sample.Application.Queue;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
-namespace DGC.Sample.Api.Workers;
+namespace DGC.Sample.Application.Queue.Workers;
 
 public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scopeFactory, ILogger<MessageProcessingServiceBase<T>> logger) : BackgroundService
 {
