@@ -1,0 +1,108 @@
+using DGC.Sample.Application.Queue;
+
+namespace DGC.Sample.Api.Workers;
+
+public abstract class MessageProcessingServiceBase<T>(IServiceScopeFactory scopeFactory, ILogger<MessageProcessingServiceBase<T>> logger) : BackgroundService
+{
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
+    private readonly ILogger _logger = logger;
+
+    protected abstract string WorkerName { get; }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        using var setupScope = _scopeFactory.CreateScope();
+        var startupConfiguration = setupScope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        var section = startupConfiguration.GetSection($"WorkerQueueSettings:{WorkerName}");
+        var pollIntervalSeconds = Math.Max(1, section.GetValue<int?>("PollIntervalSeconds") ?? 1);
+        var maxParallelism = Math.Max(1, section.GetValue<int?>("MaxDegreeOfParallelism") ?? 1);
+
+        using var semaphore = new SemaphoreSlim(maxParallelism, maxParallelism);
+        var inFlight = new HashSet<Task>();
+
+        _logger.LogInformation(
+            "Worker {WorkerName} started with pollInterval={PollIntervalSeconds}s maxParallelism={MaxParallelism}",
+            WorkerName,
+            pollIntervalSeconds,
+            maxParallelism);
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            Envelope<T>? envelope;
+
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var transport = scope.ServiceProvider.GetRequiredService<IMessageQueueTransport<T>>();
+                envelope = await transport.DequeueAsync(pollIntervalSeconds * 1000, stoppingToken).ConfigureAwait(false);
+            }
+
+            if (envelope is null)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken).ConfigureAwait(false);
+                continue;
+            }
+
+            await semaphore.WaitAsync(stoppingToken).ConfigureAwait(false);
+
+            var processingTask = ProcessEnvelopeAsync(envelope, semaphore, stoppingToken);
+
+            lock (inFlight)
+            {
+                inFlight.Add(processingTask);
+            }
+
+            _ = processingTask.ContinueWith(_ =>
+            {
+                lock (inFlight)
+                {
+                    inFlight.Remove(processingTask);
+                }
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        Task[] remaining;
+        lock (inFlight)
+        {
+            remaining = inFlight.ToArray();
+        }
+
+        if (remaining.Length > 0)
+        {
+            await Task.WhenAll(remaining).ConfigureAwait(false);
+        }
+    }
+
+    private async Task ProcessEnvelopeAsync(Envelope<T> envelope, SemaphoreSlim semaphore, CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var transport = scope.ServiceProvider.GetRequiredService<IMessageQueueTransport<T>>();
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+            var retryLimit = configuration.GetValue<int?>("Queue:Retry:Limit") ?? 10;
+            var retryDelayMs = configuration.GetValue<int?>("Queue:Retry:DelayMs") ?? 100;
+
+            try
+            {
+                await ProcessMessageAsync(scope.ServiceProvider, envelope.Payload, stoppingToken).ConfigureAwait(false);
+                await transport.AcknowledgeAsync(envelope.Id, stoppingToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await transport.HandleProcessingErrorAsync(envelope, retryLimit, retryDelayMs, _logger, ex, stoppingToken).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    protected abstract Task ProcessMessageAsync(IServiceProvider serviceProvider, T message, CancellationToken token);
+}

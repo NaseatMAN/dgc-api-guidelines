@@ -6,6 +6,7 @@
     <Project Path="src/DGC.Sample.Infrastructure/DGC.Sample.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/DGC.Sample.IntegrationTests/DGC.Sample.IntegrationTests.csproj" />
     <Project Path="tests/DGC.Sample.UnitTests/DGC.Sample.UnitTests.csproj" />
   </Folder>
 </Solution>

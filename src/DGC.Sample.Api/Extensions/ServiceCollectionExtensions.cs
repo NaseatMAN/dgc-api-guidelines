@@ -1,9 +1,13 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Queue;
+using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using DGC.Sample.Domain.Exceptions.Errors;
+using DGC.Sample.Api.Workers;
+using DGC.Sample.Api.Workers.Handlers;
 using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,6 +22,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IOrderService, OrderService>();
         services.AddInfrastructure(configuration);
+        services.AddScoped<IMessageHandler<OrderCreatedMessage>, OrderCreatedMessageHandler>();
+        services.AddHostedService<BackgroundOrderCreatedWorker>();
 
         return services;
     }
