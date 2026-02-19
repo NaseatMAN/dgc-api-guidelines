@@ -19,3 +19,12 @@ public sealed record UserUpdateRequest(
     string NationalId,
     string PhoneNumber,
     string Email);
+
+public sealed record UserRegistrationRequest(
+    string FullName,
+    string NationalId,
+    string PhoneNumber,
+    string Email,
+    string Role,
+    string Password,
+    string ConfirmPassword);

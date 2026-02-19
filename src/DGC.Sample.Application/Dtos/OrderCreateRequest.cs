@@ -8,7 +8,19 @@ public sealed class OrderCreateRequest
 
     public DateTime OrderDateUtc { get; init; }
 
+    public DateTime ShippingDateUtc { get; init; }
+
     public OrderStatus Status { get; init; }
 
     public decimal TotalAmount { get; init; }
+
+    public string? DiscountCode { get; init; }
+
+    public List<OrderItemRequest> Items { get; init; } = [];
 }
+
+public sealed record OrderItemRequest(
+    Guid ProductId,
+    string ProductName,
+    int Quantity,
+    decimal UnitPrice);

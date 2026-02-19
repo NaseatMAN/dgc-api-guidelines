@@ -24,6 +24,11 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
         return await _dbContext.Users.FirstOrDefaultAsync(u => u.NationalId == nationalId, cancellationToken);
     }
 
+    public async Task<bool> ExistsByNationalIdAsync(string nationalId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Users.AnyAsync(u => u.NationalId == nationalId, cancellationToken);
+    }
+
     public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
         await _dbContext.Users.AddAsync(user, cancellationToken);

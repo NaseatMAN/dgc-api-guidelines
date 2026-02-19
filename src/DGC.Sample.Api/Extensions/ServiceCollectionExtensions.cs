@@ -35,7 +35,6 @@ public static class ServiceCollectionExtensions
 
         // Register FluentValidation
         services.AddValidatorsFromAssemblyContaining<IOrderService>();
-        services.AddFluentValidationAutoValidation();
 
         return services;
     }
@@ -46,9 +45,13 @@ public static class ServiceCollectionExtensions
         services.AddProblemDetails();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, AzureProblemDetailsWriter>());
         services.AddScoped<IdempotencyFilter>();
+        services.AddScoped<AsyncValidationFilter>();
 
         services
-            .AddControllers()
+            .AddControllers(options =>
+            {
+                options.Filters.Add<AsyncValidationFilter>();
+            })
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>
