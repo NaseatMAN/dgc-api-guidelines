@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <ProjectReference Include="..\DGC.Sample.Domain\DGC.Sample.Domain.csproj" />
   </ItemGroup>
 

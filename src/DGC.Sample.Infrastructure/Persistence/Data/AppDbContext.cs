@@ -11,19 +11,24 @@ public sealed class AppDbContext : DbContext
     }
 
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Product> Products => Set<Product>();
     public DbSet<User> Users => Set<User>();
     public DbSet<IdempotentRequest> IdempotentRequests => Set<IdempotentRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<IdempotentRequest>(entity =>
+        modelBuilder.Entity<Product>(entity =>
         {
-            entity.ToTable("idempotent_requests");
-            entity.HasKey(req => req.IdempotencyKey);
-            entity.Property(req => req.IdempotencyKey).HasMaxLength(128);
-            entity.Property(req => req.RequestPath).HasMaxLength(500).IsRequired();
-            entity.Property(req => req.ResponseBody).IsRequired();
-            entity.HasIndex(req => req.IdempotencyKey).IsUnique();
+            entity.ToTable("products");
+            entity.HasKey(product => product.Id);
+            entity.Property(product => product.Name)
+                .HasMaxLength(200)
+                .IsRequired();
+            entity.Property(product => product.UnitPrice)
+                .HasPrecision(18, 2)
+                .IsRequired();
+            entity.Property(product => product.AvailableStock)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Order>(entity =>

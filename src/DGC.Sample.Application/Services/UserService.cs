@@ -1,6 +1,9 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Mappings;
+using DGC.Sample.Domain.Constants.ApiErrorConstants;
+using DGC.Sample.Domain.Exceptions;
+using DGC.Sample.Domain.Exceptions.Errors;
 
 namespace DGC.Sample.Application.Services;
 
@@ -22,6 +25,17 @@ public sealed class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<UserResponse> CreateAsync(UserCreateRequest request, CancellationToken cancellationToken)
     {
+        if (await _userRepository.ExistsByNationalIdAsync(request.NationalId, cancellationToken))
+        {
+            throw new BadRequestException(
+                code: BadRequestErrorCode.InvalidModelError,
+                message: "One or more validation errors occurred.",
+                azureErrorDetails: [new AzureErrorDetail(
+                    Code: $"{BadRequestErrorCode.InvalidModelError}.NationalId",
+                    Message: "National ID already exists in our records.",
+                    Target: nameof(request.NationalId))]);
+        }
+
         var user = UserMapper.ToEntity(Guid.NewGuid(), request);
         await _userRepository.AddAsync(user, cancellationToken);
         return UserMapper.ToResponse(user);
@@ -33,6 +47,18 @@ public sealed class UserService(IUserRepository userRepository) : IUserService
         if (existing is null)
         {
             return null;
+        }
+
+        if (existing.NationalId != request.NationalId && 
+            await _userRepository.ExistsByNationalIdAsync(request.NationalId, cancellationToken))
+        {
+            throw new BadRequestException(
+                code: BadRequestErrorCode.InvalidModelError,
+                message: "One or more validation errors occurred.",
+                azureErrorDetails: [new AzureErrorDetail(
+                    Code: $"{BadRequestErrorCode.InvalidModelError}.NationalId",
+                    Message: "National ID already exists in our records.",
+                    Target: nameof(request.NationalId))]);
         }
 
         existing.FullName = request.FullName;

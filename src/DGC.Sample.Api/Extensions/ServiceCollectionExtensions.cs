@@ -9,8 +9,6 @@ using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DGC.Sample.Api.Extensions;
@@ -32,10 +30,6 @@ public static class ServiceCollectionExtensions
         {
             services.AddHostedService<BackgroundOrderCreatedRedisWorker>();
         }
-
-        // Register FluentValidation
-        services.AddValidatorsFromAssemblyContaining<IOrderService>();
-        services.AddFluentValidationAutoValidation();
 
         return services;
     }

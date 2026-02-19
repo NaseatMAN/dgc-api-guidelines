@@ -25,7 +25,14 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IIdempotencyService, IdempotencyService>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+
+        // Redis & Caching
+        services.AddRedisServices(configuration);
+
+        // Caching & Idempotency
+        services.AddHybridCache();
+        services.AddScoped<IIdempotencyService, HybridCacheIdempotencyService>();
 
         services.AddQueueServices(configuration);
 
