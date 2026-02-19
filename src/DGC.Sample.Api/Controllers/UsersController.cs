@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     }
 
     [HttpPost]
+    [ServiceFilter(typeof(IdempotencyFilter))]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] UserCreateRequest request, CancellationToken cancellationToken)
     {
@@ -38,6 +40,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [ServiceFilter(typeof(IdempotencyFilter))]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UserUpdateRequest request, CancellationToken cancellationToken)
