@@ -49,7 +49,7 @@ public sealed class RedisMessageQueueTransportIntegrationTests : IAsyncLifetime
         var transport = CreateTransport();
         var message = new RedisTestMessage("integration");
 
-        await transport.EnqueueAsync(message, default);
+        await transport.EnqueueAsync(message, CancellationToken.None);
         var envelope = await transport.DequeueAsync(waitMs: 50, token: default);
 
         envelope.Should().NotBeNull();
@@ -70,7 +70,7 @@ public sealed class RedisMessageQueueTransportIntegrationTests : IAsyncLifetime
         }
 
         var transport = CreateTransport();
-        await transport.EnqueueAsync(new RedisTestMessage("to-dlq"), default);
+        await transport.EnqueueAsync(new RedisTestMessage("to-dlq"), CancellationToken.None);
 
         var envelope = await transport.DequeueAsync(waitMs: 50, token: default);
         envelope.Should().NotBeNull();
@@ -85,6 +85,22 @@ public sealed class RedisMessageQueueTransportIntegrationTests : IAsyncLifetime
 
         var dlqLength = await _database!.ListLengthAsync("deadletter:queue:redistestmessage");
         dlqLength.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task EnqueueAsync_WithQueueName_ShouldUseQueueNameAsKeyPrefix()
+    {
+        if (!_redisAvailable)
+        {
+            return;
+        }
+
+        var transport = CreateTransport();
+
+        await transport.EnqueueAsync(new RedisTestMessage("priority"), "priority", CancellationToken.None);
+
+        var queueLength = await _database!.ListLengthAsync("queue:priority:redistestmessage");
+        queueLength.Should().Be(1);
     }
 
     private RedisMessageQueueTransport<RedisTestMessage> CreateTransport()

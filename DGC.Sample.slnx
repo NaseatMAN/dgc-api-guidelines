@@ -3,6 +3,7 @@
     <Project Path="src/DGC.Sample.Api/DGC.Sample.Api.csproj" />
     <Project Path="src/DGC.Sample.Application/DGC.Sample.Application.csproj" />
     <Project Path="src/DGC.Sample.Domain/DGC.Sample.Domain.csproj" />
+    <Project Path="src/DGC.Sample.Functions/DGC.Sample.Functions.csproj" />
     <Project Path="src/DGC.Sample.Infrastructure/DGC.Sample.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">

@@ -24,6 +24,11 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
 
     public async Task EnqueueAsync(T item, CancellationToken token = default)
     {
+        await EnqueueAsync(item, queueName: null, token).ConfigureAwait(false);
+    }
+
+    public async Task EnqueueAsync(T item, string? queueName, CancellationToken token = default)
+    {
         token.ThrowIfCancellationRequested();
 
         var envelope = CreateEnvelope(item);
@@ -36,16 +41,22 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
                 new InvalidOperationException("Payload too large"));
         }
 
-        var queueKey = GetQueueKey();
+        var queueKey = GetQueueKey(queueName);
         await _database.ListLeftPushAsync(queueKey, payload).ConfigureAwait(false);
     }
 
     public async Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
     {
+        return await DequeueAsync(waitMs, queueName: null, token).ConfigureAwait(false);
+    }
+
+    public async Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+    {
         token.ThrowIfCancellationRequested();
 
-        var queueKey = GetQueueKey();
-        var processingKey = GetProcessingListKey();
+        var normalizedQueueName = NormalizeQueueName(queueName);
+        var queueKey = GetQueueKey(normalizedQueueName);
+        var processingKey = GetProcessingListKey(normalizedQueueName);
 
         RedisValue payload;
         if (waitMs <= 0)
@@ -70,8 +81,9 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
             return null;
         }
 
-        var processingMapKey = GetProcessingMapKey();
+        var processingMapKey = GetProcessingMapKey(normalizedQueueName);
         await _database.HashSetAsync(processingMapKey, envelope.Id, payload).ConfigureAwait(false);
+        await _database.HashSetAsync(GetRoutingMapKey(), envelope.Id, normalizedQueueName ?? string.Empty).ConfigureAwait(false);
 
         return envelope;
     }
@@ -80,14 +92,16 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
     {
         token.ThrowIfCancellationRequested();
 
-        var processingMapKey = GetProcessingMapKey();
+        var queueName = await GetQueueNameByEnvelopeIdAsync(envelopeId).ConfigureAwait(false);
+        var processingMapKey = GetProcessingMapKey(queueName);
         var serialized = await _database.HashGetAsync(processingMapKey, envelopeId).ConfigureAwait(false);
         if (!serialized.IsNullOrEmpty)
         {
-            await _database.ListRemoveAsync(GetProcessingListKey(), serialized, 1).ConfigureAwait(false);
+            await _database.ListRemoveAsync(GetProcessingListKey(queueName), serialized, 1).ConfigureAwait(false);
         }
 
         await _database.HashDeleteAsync(processingMapKey, envelopeId).ConfigureAwait(false);
+        await _database.HashDeleteAsync(GetRoutingMapKey(), envelopeId).ConfigureAwait(false);
     }
 
     public async Task HandleProcessingErrorAsync(
@@ -104,7 +118,8 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         envelope.LastAttemptAt = DateTimeOffset.UtcNow;
         envelope.LastError = exception.Message;
 
-        var processingMapKey = GetProcessingMapKey();
+        var queueName = await GetQueueNameByEnvelopeIdAsync(envelope.Id).ConfigureAwait(false);
+        var processingMapKey = GetProcessingMapKey(queueName);
         var originalSerialized = await _database.HashGetAsync(processingMapKey, envelope.Id).ConfigureAwait(false);
 
         if (envelope.DeliveryCount > retryLimit)
@@ -112,16 +127,21 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
             if (_deadLetterEnabled)
             {
                 var deadLetterKey = GetDeadLetterKey();
+                if (queueName is not null)
+                {
+                    deadLetterKey = GetDeadLetterKey(queueName);
+                }
                 var deadLetterPayload = SerializeEnvelope(envelope);
                 await _database.ListLeftPushAsync(deadLetterKey, deadLetterPayload).ConfigureAwait(false);
             }
 
             if (!originalSerialized.IsNullOrEmpty)
             {
-                await _database.ListRemoveAsync(GetProcessingListKey(), originalSerialized, 1).ConfigureAwait(false);
+                await _database.ListRemoveAsync(GetProcessingListKey(queueName), originalSerialized, 1).ConfigureAwait(false);
             }
 
             await _database.HashDeleteAsync(processingMapKey, envelope.Id).ConfigureAwait(false);
+            await _database.HashDeleteAsync(GetRoutingMapKey(), envelope.Id).ConfigureAwait(false);
 
             logger.LogError(
                 exception,
@@ -146,11 +166,11 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
 
         if (!originalSerialized.IsNullOrEmpty)
         {
-            await _database.ListRemoveAsync(GetProcessingListKey(), originalSerialized, 1).ConfigureAwait(false);
+            await _database.ListRemoveAsync(GetProcessingListKey(queueName), originalSerialized, 1).ConfigureAwait(false);
         }
 
         await _database.HashDeleteAsync(processingMapKey, envelope.Id).ConfigureAwait(false);
-        await _database.ListLeftPushAsync(GetQueueKey(), updatedSerialized).ConfigureAwait(false);
+        await _database.ListLeftPushAsync(GetQueueKey(queueName), updatedSerialized).ConfigureAwait(false);
     }
 
     private static Envelope<T>? DeserializeEnvelope(string payload)
@@ -187,11 +207,34 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         return $"queue:{messageName}";
     }
 
-    private string GetQueueKey() => GetQueueName();
+    private string GetQueueKey(string? queueName = null) => string.IsNullOrWhiteSpace(queueName)
+        ? GetQueueName()
+        : $"queue:{queueName.Trim().ToLowerInvariant()}:{typeof(T).Name.ToLowerInvariant()}";
 
-    private string GetProcessingListKey() => $"{GetQueueName()}:processing";
+    private string GetProcessingListKey(string? queueName = null) => $"{GetQueueKey(queueName)}:processing";
 
-    private string GetProcessingMapKey() => $"{GetQueueName()}:processing-map";
+    private string GetProcessingMapKey(string? queueName = null) => $"{GetQueueKey(queueName)}:processing-map";
 
-    private string GetDeadLetterKey() => $"{_deadLetterPrefix}:{GetQueueName()}";
+    private string GetRoutingMapKey() => $"queue:{typeof(T).Name.ToLowerInvariant()}:processing-routing";
+
+    private string GetDeadLetterKey(string? queueName = null) => $"{_deadLetterPrefix}:{GetQueueKey(queueName)}";
+
+    private static string? NormalizeQueueName(string? queueName)
+    {
+        return string.IsNullOrWhiteSpace(queueName)
+            ? null
+            : queueName.Trim().ToLowerInvariant();
+    }
+
+    private async Task<string?> GetQueueNameByEnvelopeIdAsync(string envelopeId)
+    {
+        var storedValue = await _database.HashGetAsync(GetRoutingMapKey(), envelopeId).ConfigureAwait(false);
+        if (storedValue.IsNull)
+        {
+            return null;
+        }
+
+        var normalized = storedValue.ToString();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
 }
