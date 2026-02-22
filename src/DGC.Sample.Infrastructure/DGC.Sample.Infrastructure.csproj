@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DGC.Sample.Application\DGC.Sample.Application.csproj" />
     <ProjectReference Include="..\DGC.Sample.Domain\DGC.Sample.Domain.csproj" />
   </ItemGroup>

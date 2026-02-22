@@ -2,7 +2,7 @@ using DGC.Sample.Domain.Enums;
 
 namespace DGC.Sample.Domain.Entities;
 
-public sealed class Order
+public partial class Order
 {
     public Guid Id { get; init; }
     public string CustomerName { get; set; } = string.Empty;

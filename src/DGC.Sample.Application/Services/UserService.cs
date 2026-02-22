@@ -4,9 +4,10 @@ using DGC.Sample.Application.Mappings;
 
 namespace DGC.Sample.Application.Services;
 
-public sealed class UserService(IUserRepository userRepository) : IUserService
+public sealed class UserService(IUserRepository userRepository, IUnitOfWork unitOfWork) : IUserService
 {
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<IReadOnlyList<UserResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -23,7 +24,8 @@ public sealed class UserService(IUserRepository userRepository) : IUserService
     public async Task<UserResponse> CreateAsync(UserCreateRequest request, CancellationToken cancellationToken)
     {
         var user = UserMapper.ToEntity(Guid.NewGuid(), request);
-        await _userRepository.AddAsync(user, cancellationToken);
+        _userRepository.Add(user);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return UserMapper.ToResponse(user);
     }
 
@@ -40,7 +42,8 @@ public sealed class UserService(IUserRepository userRepository) : IUserService
         existing.PhoneNumber = request.PhoneNumber;
         existing.Email = request.Email;
 
-        await _userRepository.UpdateAsync(existing, cancellationToken);
+        _userRepository.Update(existing);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return UserMapper.ToResponse(existing);
     }
 
@@ -52,7 +55,8 @@ public sealed class UserService(IUserRepository userRepository) : IUserService
             return false;
         }
 
-        await _userRepository.DeleteAsync(id, cancellationToken);
+        _userRepository.Delete(existing);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

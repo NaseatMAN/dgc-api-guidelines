@@ -1,4 +1,4 @@
-namespace DGC.Sample.Application.Interfaces.Repositoies
+namespace DGC.Sample.Application.Interfaces.Repositories
 {
     public interface IBaseRepository<TEntity>
         where TEntity : class
