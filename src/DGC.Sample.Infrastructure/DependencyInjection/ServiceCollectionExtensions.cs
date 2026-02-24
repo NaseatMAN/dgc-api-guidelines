@@ -34,6 +34,13 @@ public static class ServiceCollectionExtensions
         // Caching & Idempotency
         services.AddHybridCache();
         services.AddScoped<IIdempotencyService, HybridCacheIdempotencyService>();
+
+        // Redis & Caching
+        services.AddRedisServices(configuration);
+
+        // Caching & Idempotency
+        services.AddHybridCache();
+        services.AddScoped<IIdempotencyService, HybridCacheIdempotencyService>();
         //services.AddScoped<IIdempotencyService, IdempotencyService>();
         services.AddNotificationServices(configuration);
 
