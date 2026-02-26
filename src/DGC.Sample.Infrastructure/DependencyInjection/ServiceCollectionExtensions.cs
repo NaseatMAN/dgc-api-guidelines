@@ -4,12 +4,16 @@ using DGC.Sample.Application.Queue;
 using DGC.Sample.Infrastructure.ExternalServices.Notifications;
 using DGC.Sample.Application.Queue.Exceptions;
 using DGC.Sample.Infrastructure.Caching;
+using DGC.Sample.Infrastructure.Identity;
 using DGC.Sample.Infrastructure.Persistence.Data;
+using DGC.Sample.Infrastructure.Persistence.Interceptors;
 using DGC.Sample.Infrastructure.Persistence.Repositories;
 using DGC.Sample.Infrastructure.Queue;
+using DGC.Sample.Infrastructure.UnitOfWorks;
+using DGC.Sample.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using StackExchange.Redis;
 
@@ -23,8 +27,14 @@ public static class ServiceCollectionExtensions
             configuration.GetConnectionString("DefaultConnection")
             ?? "Host=localhost;Port=5432;Database=dgc_sample;Username=postgres;Password=password";
 
-        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(defaultConnection));
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(defaultConnection)
+                .AddInterceptors(new SoftDeleteInterceptor(), new AuditInterceptor()));
 
+        services.AddHttpContextAccessor();
+        services.AddScoped<ITenantAccessor, HttpTenantAccessor>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
 

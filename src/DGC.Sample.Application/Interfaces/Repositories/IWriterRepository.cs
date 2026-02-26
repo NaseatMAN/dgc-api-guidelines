@@ -7,7 +7,7 @@ namespace DGC.Sample.Application.Interfaces.Repositories
         //Task UpdateAsync(TEntity entity, CancellationToken cancellationToken);
         //Task DeleteAsync(TEntity entity, CancellationToken cancellationToken);
         TEntity CreateEntity();
-        void Create(TEntity entity);
+        void Add(TEntity entity);
         void Update(TEntity entity);
         void Delete(TEntity entity);
     }

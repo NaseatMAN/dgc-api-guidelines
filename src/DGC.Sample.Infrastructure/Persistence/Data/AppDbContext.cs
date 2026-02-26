@@ -3,13 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DGC.Sample.Infrastructure.Persistence.Data;
 
-public sealed class AppDbContext : DbContext
+public partial class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<User> Users => Set<User>();
 
@@ -51,5 +46,9 @@ public sealed class AppDbContext : DbContext
             entity.Property(user => user.CreatedAtUtc)
                 .IsRequired();
         });
+
+        OnModelCreatingPartial(modelBuilder);
     }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

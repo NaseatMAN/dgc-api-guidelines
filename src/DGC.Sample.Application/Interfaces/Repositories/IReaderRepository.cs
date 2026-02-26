@@ -1,20 +1,18 @@
 using System.Linq.Expressions;
+using DGC.Sample.Domain.Specifications;
 
 namespace DGC.Sample.Application.Interfaces.Repositories
 {
     public interface IReaderRepository<TEntity> : IBaseRepository<TEntity>
         where TEntity : class
     {
-        Task<TEntity?> FindObjectByKeyAsync(object key, CancellationToken cancellationToken);
-        Task<TEntity?> FindObjectByKeyAsync(object key, Func<IQueryable<TEntity>, IQueryable<TEntity>>? include, CancellationToken cancellationToken);
-        Task<TEntity?> FindObjectAsync(Expression<Func<TEntity, bool>> expression, Func<IQueryable<TEntity>, IQueryable<TEntity>>? include, CancellationToken cancellationToken);
-        Task<TEntity?> FindObjectAsync(Expression<Func<TEntity, bool>> expression, CancellationToken cancellationToken);
-        IQueryable<TEntity> GetObjectsAsync(Expression<Func<TEntity, bool>>? expression, CancellationToken cancellationToken);
-        IQueryable<TEntity> GetObjectsAsync(Expression<Func<TEntity, bool>>? expression, Func<IQueryable<TEntity>, IQueryable<TEntity>>? include, CancellationToken cancellationToken);
-        IQueryable<TEntity> GetObjectsAsync(Expression<Func<TEntity, bool>>? expression, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy, Func<IQueryable<TEntity>, IQueryable<TEntity>>? include, CancellationToken cancellationToken);
+        ValueTask<TEntity?> FindByKeyAsync(CancellationToken cancellationToken, params object[] keyValues);
+        Task<TEntity?> FindFirstAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken);
+        Task<TEntity?> FindFirstAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken);
+        Task<IReadOnlyList<TEntity>> GetListAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken);
         Task<bool> AnyAsync(CancellationToken cancellationToken);
-        Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? expression, CancellationToken cancellationToken);
+        Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken);
         Task<int> CountAsync(CancellationToken cancellationToken);
-        Task<int> CountAsync(Expression<Func<TEntity, bool>>? expression, CancellationToken cancellationToken);
+        Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken);
     }
 }
