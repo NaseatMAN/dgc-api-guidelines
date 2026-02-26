@@ -1,8 +1,8 @@
 using DGC.Sample.Application.Dtos;
 
-namespace DGC.Sample.Application.Interfaces;
+namespace DGC.Sample.Application.Interfaces.Repositories;
 
-public interface IOrderService
+public interface IOrderRepository
 {
     Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<OrderResponse>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken);

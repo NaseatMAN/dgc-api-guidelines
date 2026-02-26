@@ -17,7 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using StackExchange.Redis;
 using DGC.Sample.Application.Interfaces.Persistence;
-using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Application.Interfaces.Repositories;
 
 namespace DGC.Sample.Infrastructure.DependencyInjection;
@@ -38,8 +37,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantAccessor, HttpTenantAccessor>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
 
         // Redis & Caching
         services.AddRedisServices(configuration);

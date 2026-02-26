@@ -1,11 +1,12 @@
-using DGC.Sample.Application.Interfaces.Repositories;
-using DGC.Sample.Domain.Entities;
+using DGC.Sample.Application.Dtos;
 
 namespace DGC.Sample.Application.Interfaces.Repositories;
 
-public interface IUserRepository : IRepository<User>
+public interface IUserRepository
 {
-    Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken);
-    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<User?> GetByNationalIdAsync(string nationalId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<UserResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<UserResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<UserResponse> CreateAsync(UserCreateRequest request, CancellationToken cancellationToken);
+    Task<UserResponse?> UpdateAsync(Guid id, UserUpdateRequest request, CancellationToken cancellationToken);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
 }
