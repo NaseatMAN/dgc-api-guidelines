@@ -1,9 +1,9 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Domain.Enums;
 
-namespace DGC.Sample.Application.Interfaces;
+namespace DGC.Sample.Application.Interfaces.Repositories;
 
-public interface IOrderService
+public interface IOrderRepository
 {
     Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken);

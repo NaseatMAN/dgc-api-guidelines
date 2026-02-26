@@ -1,4 +1,5 @@
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Application.Queue.Workers.Handlers;
@@ -34,7 +35,7 @@ var host = new HostBuilder()
         services.AddSingleton<IValidateOptions<AzureFunctionsQueueOptions>, AzureFunctionsQueueOptionsValidator>();
 
         services.AddInfrastructure(context.Configuration);
-        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<DGC.Sample.Application.Interfaces.Repositories.IOrderRepository, OrderService>();
         services.AddScoped<IMessageHandler<OrderCreatedMessage>, OrderCreatedMessageHandler>();
     })
     .Build();

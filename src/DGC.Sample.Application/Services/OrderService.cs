@@ -2,54 +2,62 @@ using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Domain.Enums;
 using DGC.Sample.Application.Interfaces.Persistence;
-using DGC.Sample.Application.Interfaces.Services;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Mappings;
+using DGC.Sample.Domain.Entities;
 using DGC.Sample.Domain.Specifications.Orders;
 
 namespace DGC.Sample.Application.Services;
 
-public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IOrderService
+public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderRepository
 {
-    private readonly IOrderRepository _orderRepository = orderRepository;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var orders = await _orderRepository.GetAllAsync(cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var orders = entityRepository.QueryAsNoTracking()
+            .OrderBy(order => order.OrderDateUtc)
+            .ToList();
         return [.. orders.Select(OrderMapper.ToResponse)];
     }
 
     public async Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken)
     {
         var spec = new OrderFilterSpec(status, customerName);
-        var orders = await _orderRepository.GetListAsync(spec, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var orders = await entityRepository.GetListAsync(spec, cancellationToken);
         return [.. orders.Select(OrderMapper.ToResponse)];
     }
 
     public async Task<IReadOnlyList<OrderResponse>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
     {
         var spec = new OrderIncludingDeletedSpec();
-        var orders = await _orderRepository.GetListAsync(spec, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var orders = await entityRepository.GetListAsync(spec, cancellationToken);
         return [.. orders.Select(OrderMapper.ToResponse)];
     }
 
     public async Task<OrderResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var order = await _orderRepository.GetByIdAsync(id, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var order = await entityRepository.FindFirstAsync(order => order.Id == id, cancellationToken);
         return order is null ? null : OrderMapper.ToResponse(order);
     }
 
     public async Task<OrderResponse> CreateAsync(OrderCreateRequest request, CancellationToken cancellationToken)
     {
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
         var order = OrderMapper.ToEntity(Guid.NewGuid(), request);
-        _orderRepository.Add(order);
+        entityRepository.Add(order);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return OrderMapper.ToResponse(order);
     }
 
     public async Task<(OrderResponse Response, bool Created)> UpsertAsync(Guid id, OrderUpdateRequest request, CancellationToken cancellationToken)
     {
-        var existing = await _orderRepository.GetByIdAsync(id, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var existing = await entityRepository.FindFirstAsync(order => order.Id == id, cancellationToken);
         if (existing is null)
         {
             var newOrder = OrderMapper.ToEntity(id, new OrderCreateRequest
@@ -59,7 +67,7 @@ public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork u
                 Status = request.Status,
                 TotalAmount = request.TotalAmount
             });
-            _orderRepository.Add(newOrder);
+            entityRepository.Add(newOrder);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return (OrderMapper.ToResponse(newOrder), true);
         }
@@ -69,17 +77,18 @@ public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork u
         existing.Status = (int)request.Status;
         existing.TotalAmount = request.TotalAmount;
 
-        _orderRepository.Update(existing);
+        entityRepository.Update(existing);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return (OrderMapper.ToResponse(existing), false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var order = await _orderRepository.GetByIdAsync(id, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var order = await entityRepository.FindFirstAsync(order => order.Id == id, cancellationToken);
         if (order != null)
         {
-            _orderRepository.Delete(order);
+            entityRepository.Delete(order);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }

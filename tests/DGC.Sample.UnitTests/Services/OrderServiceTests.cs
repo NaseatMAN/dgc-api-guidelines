@@ -1,6 +1,6 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces.Persistence;
-using DGC.Sample.Application.Interfaces.Services;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Entities;
 using DGC.Sample.Domain.Enums;
@@ -12,15 +12,16 @@ namespace DGC.Sample.UnitTests.Services;
 
 public sealed class OrderServiceTests
 {
-    private readonly IOrderRepository _orderRepository;
+    private readonly IRepository<Order> _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly OrderService _orderService;
 
     public OrderServiceTests()
     {
-        _orderRepository = Substitute.For<IOrderRepository>();
+        _orderRepository = Substitute.For<IRepository<Order>>();
         _unitOfWork = Substitute.For<IUnitOfWork>();
-        _orderService = new OrderService(_orderRepository, _unitOfWork);
+        _unitOfWork.GetEntityRepository<Order>().Returns(_orderRepository);
+        _orderService = new OrderService(_unitOfWork);
     }
 
     [Fact]
@@ -44,7 +45,8 @@ public sealed class OrderServiceTests
             TotalAmount = 200 
         };
 
-        _orderRepository.GetByIdAsync(id, Arg.Any<CancellationToken>()).Returns(existingOrder);
+        _orderRepository.FindFirstAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Order, bool>>>(), Arg.Any<CancellationToken>())
+            .Returns(existingOrder);
 
         // Act
         var (response, created) = await _orderService.UpsertAsync(id, updateRequest, default);
@@ -70,7 +72,8 @@ public sealed class OrderServiceTests
             TotalAmount = 200 
         };
 
-        _orderRepository.GetByIdAsync(id, Arg.Any<CancellationToken>()).Returns((Order?)null);
+        _orderRepository.FindFirstAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Order, bool>>>(), Arg.Any<CancellationToken>())
+            .Returns((Order?)null);
 
         // Act
         var (response, created) = await _orderService.UpsertAsync(id, updateRequest, default);

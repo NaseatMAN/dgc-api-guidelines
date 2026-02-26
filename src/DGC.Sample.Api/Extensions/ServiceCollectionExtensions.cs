@@ -2,6 +2,7 @@ using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Notifications;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Application.Queue.Workers;
@@ -23,8 +24,8 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddScoped<IOrderService, OrderService>();
-        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<DGC.Sample.Application.Interfaces.Repositories.IOrderRepository, OrderService>();
+        services.AddScoped<DGC.Sample.Application.Interfaces.Repositories.IUserRepository, UserService>();
         services.AddScoped<INotificationChannelSender, EmailNotificationChannelSender>();
         services.AddScoped<INotificationChannelSender, TelegramNotificationChannelSender>();
         services.AddScoped<INotificationSenderFactory, NotificationSenderFactory>();
@@ -40,7 +41,7 @@ public static class ServiceCollectionExtensions
         }
 
         // Register FluentValidation
-        services.AddValidatorsFromAssemblyContaining<IOrderService>();
+        services.AddValidatorsFromAssemblyContaining<DGC.Sample.Application.Interfaces.Repositories.IOrderRepository>();
         services.AddFluentValidationAutoValidation();
 
         return services;
