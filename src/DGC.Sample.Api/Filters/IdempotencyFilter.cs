@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using DGC.Sample.Application.Interfaces;
 using System.Text.Json;
+using DGC.Sample.Application.Interfaces.Persistence;
 
 namespace DGC.Sample.Api.Filters;
 

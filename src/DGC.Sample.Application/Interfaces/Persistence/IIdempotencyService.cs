@@ -1,8 +1,8 @@
 using DGC.Sample.Application.Dtos;
 
-namespace DGC.Sample.Application.Interfaces;
+namespace DGC.Sample.Application.Interfaces.Persistence;
 
-public interface IIdempotencyService
+    public interface IIdempotencyService
 {
     Task<IdempotencyResult?> GetRequestAsync(string idempotencyKey, CancellationToken cancellationToken);
     Task<bool> TryStartRequestAsync(string idempotencyKey, CancellationToken cancellationToken);

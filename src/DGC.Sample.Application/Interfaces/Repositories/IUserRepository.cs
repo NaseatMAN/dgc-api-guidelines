@@ -1,7 +1,7 @@
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Domain.Entities;
 
-namespace DGC.Sample.Application.Interfaces;
+namespace DGC.Sample.Application.Interfaces.Repositories;
 
 public interface IUserRepository : IRepository<User>
 {
