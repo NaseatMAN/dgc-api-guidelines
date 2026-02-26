@@ -1,8 +1,6 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
-using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Notifications;
-using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Application.Queue.Workers;

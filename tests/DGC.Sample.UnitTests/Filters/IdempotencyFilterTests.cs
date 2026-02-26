@@ -1,6 +1,7 @@
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Domain.Exceptions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -81,7 +82,7 @@ public sealed class IdempotencyFilterTests
 
         _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
             .Returns((IdempotencyResult?)null);
-            
+
         _idempotencyService.TryStartRequestAsync(key, Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -96,8 +97,29 @@ public sealed class IdempotencyFilterTests
             200,
             Arg.Is<string>(s => s.Contains("\"id\":1")),
             Arg.Any<CancellationToken>());
-        
+
         context.HttpContext.Response.Headers["Idempotency-Key"].ToString().Should().Be(key);
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_WhenKeyProcessing_ShouldThrowConflictException()
+    {
+        // Arrange
+        var key = "processing-key";
+        var context = CreateActionExecutingContext(key);
+        var cachedResponse = new IdempotencyResult(201, "{}", IsProcessing: true);
+
+        _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
+            .Returns(cachedResponse);
+
+        ActionExecutionDelegate next = () => throw new Exception("Should not be called");
+
+        // Act
+        var act = async () => await _filter.OnActionExecutionAsync(context, next);
+
+        // Assert
+        var exception = await act.Should().ThrowAsync<ConflictException>();
+        exception.Which.ResponseBody.Error.Code.Should().Be(ConflictErrorCode.IdempotencyKeyProcessing);
     }
 
     private static ActionExecutingContext CreateActionExecutingContext(string? idempotencyKey = null)
