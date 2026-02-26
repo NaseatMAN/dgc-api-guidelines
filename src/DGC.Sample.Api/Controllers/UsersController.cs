@@ -2,6 +2,7 @@ using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DGC.Sample.Api.Controllers;
@@ -9,15 +10,23 @@ namespace DGC.Sample.Api.Controllers;
 [ApiController]
 [ApiVersion("2026-02-05")]
 [Route("users")]
-public sealed class UsersController(IUserService userService) : ControllerBase
+public sealed class UsersController(DGC.Sample.Application.Interfaces.Repositories.IUserRepository userService) : ControllerBase
 {
-    private readonly IUserService _userService = userService;
+    private readonly DGC.Sample.Application.Interfaces.Repositories.IUserRepository _userService = userService;
 
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<UserResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var users = await _userService.GetAllAsync(cancellationToken);
+        return Ok(users);
+    }
+
+    [HttpGet("active")]
+    [ProducesResponseType(typeof(IReadOnlyList<UserResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetActive(CancellationToken cancellationToken)
+    {
+        var users = await _userService.GetActiveUsersAsync(cancellationToken);
         return Ok(users);
     }
 

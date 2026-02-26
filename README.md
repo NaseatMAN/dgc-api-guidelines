@@ -1,4 +1,5 @@
 # .NET Backend Project Template  
+
 **Standard Architecture & Best Practices for Backend Teams**
 
 ---
@@ -34,6 +35,7 @@ API → Application → Domain ← Infrastructure
 ```
 
 ### Key Rules
+
 - Dependencies flow **inward**
 - Business logic is **framework-independent**
 - Infrastructure is **replaceable**
@@ -94,6 +96,7 @@ tests/
 ## 🧱 Layer Responsibilities
 
 ### API Layer
+
 - HTTP endpoints
 - Authentication & Authorization
 - API versioning
@@ -101,6 +104,7 @@ tests/
 - No business logic
 
 ### Application Layer
+
 - Business use cases
 - DTOs and mappings
 - Input validation
@@ -108,12 +112,14 @@ tests/
 - Orchestration logic
 
 ### Domain Layer
+
 - Core business rules
 - Entities and value objects
 - Domain exceptions
 - No framework or infrastructure dependencies
 
 ### Infrastructure Layer
+
 - Database access (EF Core)
 - External service integrations
 - File storage, caching, messaging
@@ -161,6 +167,7 @@ Testing is **mandatory**.
 ## 📐 Coding Standards
 
 ### General Rules
+
 - Follow **SOLID principles**
 - Use `async/await` everywhere
 - Controllers must not contain business logic
@@ -168,6 +175,7 @@ Testing is **mandatory**.
 - No magic values or hard-coded configuration
 
 ### Naming Conventions
+
 - `PascalCase` → Classes, methods
 - `camelCase` → Variables
 - `Async` suffix for async methods
@@ -186,24 +194,32 @@ Testing is **mandatory**.
 
 ---
 
-## PostgreSQL setup (sample CRUD)
+## 🛠 Development Workflow (Database-First)
 
-1. Ensure PostgreSQL is running.
-2. Add EF Core tools:
-   - Package Manager Console (VS): `Install-Package Microsoft.EntityFrameworkCore.Design -Project DGC.Sample.Infrastructure`
-   - CLI: `dotnet tool install --global dotnet-ef --version 10.0.0`
-3. Create the initial migration:
-   - PMC: `Add-Migration InitialCreate -Project DGC.Sample.Infrastructure -StartupProject DGC.Sample.Api`
-   - CLI: `dotnet ef migrations add InitialCreate --project DGC.Sample.Infrastructure --startup-project DGC.Sample.Api`
-4. Apply the migration:
-   - PMC: `Update-Database -Project DGC.Sample.Infrastructure -StartupProject DGC.Sample.Api`
-   - CLI: `dotnet ef database update --project DGC.Sample.Infrastructure --startup-project DGC.Sample.Api`
+This project uses a **Database-First** approach with Entity Framework Core. The database schema is the source of truth, and entities are scaffolded into the Domain layer.
+
+### Core Principles
+
+- **Partial Class Separation**: All entities are split into scaffolded `.cs` files and manual `.Custom.cs` files.
+- **No Manual Edits**: Never edit auto-generated entity files directly; they will be overwritten.
+- **Customizations**: Use the `Customizations/` folder for interfaces, logic, and calculated properties.
+
+For detailed instructions on scaffolding, resolving build errors, and maintaining entity customizations, see:
+👉 **[Detailed Development Workflow Guide](docs/api/development-workflow.md)**
+
+---
+
+## 🗄 Database Setup
+
+1. Ensure PostgreSQL is running (e.g., via `docker-compose up -d`).
+2. Run the scaffolding command (see the [Workflow Guide](docs/api/development-workflow.md#step-2-run-scaffolding) for the full command).
 
 ### Local secrets (User Secrets)
 
 Sensitive settings are stored in .NET User Secrets for local development instead of committed `appsettings*.json` files.
 
 Current keys moved to User Secrets:
+
 - `ConnectionStrings:DefaultConnection`
 - `ConnectionStrings:Redis`
 - `AzureWebJobsStorage` (when API publishes to Azure queue)
@@ -265,6 +281,7 @@ When omitted/empty, workers consume the default queue for their transport.
 Base URL (default): `https://localhost:5288`
 
 Create:
+
 ```bash
 curl -k -X POST "https://localhost:5288/orders?api-version=2025-05-01" \
   -H "Content-Type: application/json" \
@@ -272,16 +289,19 @@ curl -k -X POST "https://localhost:5288/orders?api-version=2025-05-01" \
 ```
 
 List:
+
 ```bash
 curl -k "https://localhost:5288/orders?api-version=2025-05-01"
 ```
 
 Get by id:
+
 ```bash
 curl -k "https://localhost:5288/orders/{id}?api-version=2025-05-01"
 ```
 
 Update:
+
 ```bash
 curl -k -X PUT "https://localhost:5288/orders/{id}?api-version=2025-05-01" \
   -H "Content-Type: application/json" \
@@ -289,6 +309,7 @@ curl -k -X PUT "https://localhost:5288/orders/{id}?api-version=2025-05-01" \
 ```
 
 Delete:
+
 ```bash
 curl -k -X DELETE "https://localhost:5288/orders/{id}?api-version=2025-05-01"
 ```
@@ -304,8 +325,10 @@ Base URL (example): `https://localhost:5288`
 3. For POST/PUT, set **Body → raw → JSON** and paste the example payload.
 
 Create (POST):
+
 - URL: `https://localhost:5288/orders?api-version=2025-05-01`
 - Body (JSON):
+
 ```json
 {
   "customerName": "Contoso Ltd",
@@ -316,14 +339,18 @@ Create (POST):
 ```
 
 List (GET):
+
 - URL: `https://localhost:5288/orders?api-version=2025-05-01`
 
 Get by id (GET):
+
 - URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
 
 Update (PUT):
+
 - URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
 - Body (JSON):
+
 ```json
 {
   "customerName": "Contoso Ltd",
@@ -334,6 +361,7 @@ Update (PUT):
 ```
 
 Delete (DELETE):
+
 - URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
 
 ---

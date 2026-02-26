@@ -1,5 +1,5 @@
-using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Notifications;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -10,14 +10,14 @@ public static class ApplicationExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<IOrderService, OrderService>();
-        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IOrderRepository, OrderService>();
+        services.AddScoped<IUserRepository, UserService>();
         services.AddScoped<INotificationChannelSender, EmailNotificationChannelSender>();
         services.AddScoped<INotificationChannelSender, TelegramNotificationChannelSender>();
         services.AddScoped<INotificationSenderFactory, NotificationSenderFactory>();
         services.AddScoped<INotificationService, NotificationService>();
 
-        services.AddValidatorsFromAssemblyContaining<IOrderService>();
+        services.AddValidatorsFromAssemblyContaining<IOrderRepository>();
         services.AddFluentValidationAutoValidation();
 
         return services;
