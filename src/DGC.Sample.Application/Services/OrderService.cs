@@ -1,23 +1,28 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Application.Mappings;
-using DGC.Sample.Domain.Entities;
+using DGC.Sample.Domain.Specifications.Orders;
 
 namespace DGC.Sample.Application.Services;
 
-public sealed class OrderService : IOrderService
+public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork unitOfWork) : IOrderService
 {
-    private readonly IOrderRepository _orderRepository;
-
-    public OrderService(IOrderRepository orderRepository)
-    {
-        _orderRepository = orderRepository;
-    }
+    private readonly IOrderRepository _orderRepository = orderRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var orders = await _orderRepository.GetAllAsync(cancellationToken);
-        return orders.Select(OrderMapper.ToResponse).ToArray();
+        return [.. orders.Select(OrderMapper.ToResponse)];
+    }
+
+    public async Task<IReadOnlyList<OrderResponse>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken)
+    {
+        var spec = new OrderIncludingDeletedSpec();
+        var orders = await _orderRepository.GetListAsync(spec, cancellationToken);
+        return [.. orders.Select(OrderMapper.ToResponse)];
     }
 
     public async Task<OrderResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -29,7 +34,8 @@ public sealed class OrderService : IOrderService
     public async Task<OrderResponse> CreateAsync(OrderCreateRequest request, CancellationToken cancellationToken)
     {
         var order = OrderMapper.ToEntity(Guid.NewGuid(), request);
-        await _orderRepository.AddAsync(order, cancellationToken);
+        _orderRepository.Add(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return OrderMapper.ToResponse(order);
     }
 
@@ -45,7 +51,8 @@ public sealed class OrderService : IOrderService
                 Status = request.Status,
                 TotalAmount = request.TotalAmount
             });
-            await _orderRepository.AddAsync(newOrder, cancellationToken);
+            _orderRepository.Add(newOrder);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return (OrderMapper.ToResponse(newOrder), true);
         }
 
@@ -54,12 +61,18 @@ public sealed class OrderService : IOrderService
         existing.Status = request.Status;
         existing.TotalAmount = request.TotalAmount;
 
-        await _orderRepository.UpdateAsync(existing, cancellationToken);
+        _orderRepository.Update(existing);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return (OrderMapper.ToResponse(existing), false);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        await _orderRepository.DeleteAsync(id, cancellationToken);
+        var order = await _orderRepository.GetByIdAsync(id, cancellationToken);
+        if (order != null)
+        {
+            _orderRepository.Delete(order);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
     }
 }

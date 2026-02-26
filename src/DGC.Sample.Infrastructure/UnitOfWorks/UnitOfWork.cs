@@ -1,6 +1,8 @@
 using DGC.Sample.Application.Interfaces;
-using DGC.Sample.Application.Interfaces.Repositoies;
+using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Infrastructure.Persistence.Data;
+using DGC.Sample.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,7 +21,7 @@ namespace DGC.Sample.Infrastructure.UnitOfWorks
         }
 
         public TRepository GetRepository<TRepository>()
-            where TRepository : class, IBaseRepository<TRepository>
+            where TRepository : class
         {
             var repository = serviceProvider.GetService<TRepository>();
             ArgumentNullException.ThrowIfNull(repository, $"Repository of type {typeof(TRepository).FullName} is not registered.");
@@ -29,7 +31,7 @@ namespace DGC.Sample.Infrastructure.UnitOfWorks
 
         public IRepository<TEntity> GetEntityRepository<TEntity>() where TEntity : class
         {
-            throw new NotImplementedException();
+            return new Repository<TEntity>(context);
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

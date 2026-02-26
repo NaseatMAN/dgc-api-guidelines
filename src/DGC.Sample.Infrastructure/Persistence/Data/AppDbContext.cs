@@ -3,29 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DGC.Sample.Infrastructure.Persistence.Data;
 
-public sealed class AppDbContext : DbContext
+public partial class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<User> Users => Set<User>();
-    public DbSet<IdempotentRequest> IdempotentRequests => Set<IdempotentRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<IdempotentRequest>(entity =>
-        {
-            entity.ToTable("idempotent_requests");
-            entity.HasKey(req => req.IdempotencyKey);
-            entity.Property(req => req.IdempotencyKey).HasMaxLength(128);
-            entity.Property(req => req.RequestPath).HasMaxLength(500).IsRequired();
-            entity.Property(req => req.ResponseBody).IsRequired();
-            entity.HasIndex(req => req.IdempotencyKey).IsUnique();
-        });
-
         modelBuilder.Entity<Order>(entity =>
         {
             entity.ToTable("orders");
@@ -62,5 +46,9 @@ public sealed class AppDbContext : DbContext
             entity.Property(user => user.CreatedAtUtc)
                 .IsRequired();
         });
+
+        OnModelCreatingPartial(modelBuilder);
     }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

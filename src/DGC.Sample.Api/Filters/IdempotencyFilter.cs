@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using DGC.Sample.Infrastructure.Persistence;
 using System.Text.Json;
+using DGC.Sample.Application.Interfaces.Persistence;
 
 namespace DGC.Sample.Api.Filters;
 
@@ -23,6 +23,20 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
 
         if (existingRequest != null)
         {
+            if (existingRequest.IsProcessing)
+            {
+                // A request with this key is currently being processed
+                context.Result = new ConflictObjectResult(new
+                {
+                    error = new
+                    {
+                        code = "IdempotencyKeyProcessing",
+                        message = "A request with the same idempotency key is currently being processed."
+                    }
+                });
+                return;
+            }
+
             context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
             context.HttpContext.Response.Headers["Repeatability-Result"] = "accepted"; // Consistent with Azure LRO/Repeatability patterns
             
@@ -36,6 +50,35 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
             return;
         }
 
+        // Try to atomically reserve the key
+        if (!await _idempotencyService.TryStartRequestAsync(key, context.HttpContext.RequestAborted))
+        {
+            // Re-check in case it finished between Get and TryStart
+            var finalCheck = await _idempotencyService.GetRequestAsync(key, context.HttpContext.RequestAborted);
+            if (finalCheck != null && !finalCheck.IsProcessing)
+            {
+                context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
+                context.HttpContext.Response.Headers["Repeatability-Result"] = "accepted";
+                context.Result = new ContentResult
+                {
+                    Content = finalCheck.ResponseBody,
+                    ContentType = "application/json",
+                    StatusCode = finalCheck.StatusCode
+                };
+                return;
+            }
+
+            context.Result = new ConflictObjectResult(new
+            {
+                error = new
+                {
+                    code = "IdempotencyKeyProcessing",
+                    message = "A request with the same idempotency key is currently being processed."
+                }
+            });
+            return;
+        }
+
         var executedContext = await next();
 
         if (executedContext.Result is ObjectResult objectResult && objectResult.StatusCode is >= 200 and < 300)
@@ -43,7 +86,6 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
             var responseBody = JsonSerializer.Serialize(objectResult.Value);
             await _idempotencyService.SaveRequestAsync(
                 key,
-                context.HttpContext.Request.Path,
                 objectResult.StatusCode.Value,
                 responseBody,
                 context.HttpContext.RequestAborted);
