@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Notifications;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Application.Queue.Workers;
@@ -24,6 +25,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<INotificationChannelSender, EmailNotificationChannelSender>();
+        services.AddScoped<INotificationChannelSender, TelegramNotificationChannelSender>();
+        services.AddScoped<INotificationSenderFactory, NotificationSenderFactory>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddInfrastructure(configuration);
         services.AddScoped<IMessageHandler<OrderCreatedMessage>, OrderCreatedMessageHandler>();
         services.AddHostedService<BackgroundOrderCreatedWorker>();
