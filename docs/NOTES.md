@@ -20,7 +20,7 @@
 - EF Core with PostgreSQL (Npgsql).
 - DbContext: `src/DGC.Sample.Infrastructure/Persistence/Context/AppDbContext.cs`.
 - Repository: `src/DGC.Sample.Infrastructure/Persistence/Repositories/OrderRepository.cs`.
-- DI: `src/DGC.Sample.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`.
+- DI: entrypoint-owned registration in `src/DGC.Sample.Api/Extensions/*.cs` and `src/DGC.Sample.Functions/Extensions/*.cs`.
 
 ### Configuration
 - Non-sensitive defaults live in:
