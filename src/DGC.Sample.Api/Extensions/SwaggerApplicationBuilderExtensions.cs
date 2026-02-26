@@ -4,10 +4,10 @@ namespace DGC.Sample.Api.Extensions;
 
 public static class SwaggerApplicationBuilderExtensions
 {
-    public static IApplicationBuilder UseSwaggerConfiguration(
-        this IApplicationBuilder app,
-        IApiVersionDescriptionProvider provider)
+    public static IApplicationBuilder UseSwaggerConfiguration(this IApplicationBuilder app)
     {
+        var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
+
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {

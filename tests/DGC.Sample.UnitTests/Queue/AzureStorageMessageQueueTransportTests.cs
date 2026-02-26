@@ -1,6 +1,6 @@
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Exceptions;
-using DGC.Sample.Infrastructure.DependencyInjection;
+using DGC.Sample.Api.Extensions;
 using DGC.Sample.Infrastructure.Queue;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +28,7 @@ public sealed class AzureStorageMessageQueueTransportTests
     }
 
     [Fact]
-    public void AddQueueServices_WhenAzureConfigPresent_ShouldResolveAzureTransport()
+    public void AddQueueInfrastructure_WhenAzureConfigPresent_ShouldResolveAzureTransport()
     {
         var configuration = BuildConfiguration(new Dictionary<string, string?>
         {
@@ -38,7 +38,7 @@ public sealed class AzureStorageMessageQueueTransportTests
         });
 
         var services = new ServiceCollection();
-        services.AddQueueServices(configuration);
+        services.AddQueueInfrastructure(configuration);
 
         using var provider = services.BuildServiceProvider();
         var resolver = provider.GetRequiredService<ITransportResolver<string>>();
@@ -49,7 +49,7 @@ public sealed class AzureStorageMessageQueueTransportTests
     }
 
     [Fact]
-    public void AddQueueServices_WhenAzureDefaultConfiguredWithoutRequiredSettings_ShouldThrow()
+    public void AddQueueInfrastructure_WhenAzureDefaultConfiguredWithoutRequiredSettings_ShouldThrow()
     {
         var configuration = BuildConfiguration(new Dictionary<string, string?>
         {
@@ -58,7 +58,7 @@ public sealed class AzureStorageMessageQueueTransportTests
 
         var services = new ServiceCollection();
 
-        var act = () => services.AddQueueServices(configuration);
+        var act = () => services.AddQueueInfrastructure(configuration);
 
         act.Should().Throw<TransportInitializationException>();
     }
