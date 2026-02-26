@@ -3,37 +3,41 @@ using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Mappings;
+using DGC.Sample.Domain.Entities;
 
 namespace DGC.Sample.Application.Services;
 
-public sealed class UserService(IUserRepository userRepository, IUnitOfWork unitOfWork) : IUserService
+public sealed class UserService(IUnitOfWork unitOfWork) : IUserRepository
 {
-    private readonly IUserRepository _userRepository = userRepository;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<IReadOnlyList<UserResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var users = await _userRepository.GetAllAsync(cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<User>();
+        var users = entityRepository.QueryAsNoTracking().ToList();
         return users.Select(UserMapper.ToResponse).ToArray();
     }
 
     public async Task<UserResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<User>();
+        var user = await entityRepository.FindFirstAsync(u => u.Id == id, cancellationToken);
         return user is null ? null : UserMapper.ToResponse(user);
     }
 
     public async Task<UserResponse> CreateAsync(UserCreateRequest request, CancellationToken cancellationToken)
     {
+        var entityRepository = _unitOfWork.GetEntityRepository<User>();
         var user = UserMapper.ToEntity(Guid.NewGuid(), request);
-        _userRepository.Add(user);
+        entityRepository.Add(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return UserMapper.ToResponse(user);
     }
 
     public async Task<UserResponse?> UpdateAsync(Guid id, UserUpdateRequest request, CancellationToken cancellationToken)
     {
-        var existing = await _userRepository.GetByIdAsync(id, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<User>();
+        var existing = await entityRepository.FindFirstAsync(u => u.Id == id, cancellationToken);
         if (existing is null)
         {
             return null;
@@ -44,20 +48,21 @@ public sealed class UserService(IUserRepository userRepository, IUnitOfWork unit
         existing.PhoneNumber = request.PhoneNumber;
         existing.Email = request.Email;
 
-        _userRepository.Update(existing);
+        entityRepository.Update(existing);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return UserMapper.ToResponse(existing);
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await _userRepository.GetByIdAsync(id, cancellationToken);
+        var entityRepository = _unitOfWork.GetEntityRepository<User>();
+        var existing = await entityRepository.FindFirstAsync(u => u.Id == id, cancellationToken);
         if (existing is null)
         {
             return false;
         }
 
-        _userRepository.Delete(existing);
+        entityRepository.Delete(existing);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
