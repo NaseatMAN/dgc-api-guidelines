@@ -66,7 +66,7 @@ public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork u
 
         existing.CustomerName = request.CustomerName;
         existing.OrderDateUtc = request.OrderDateUtc;
-        existing.Status = request.Status;
+        existing.Status = (int)request.Status;
         existing.TotalAmount = request.TotalAmount;
 
         _orderRepository.Update(existing);

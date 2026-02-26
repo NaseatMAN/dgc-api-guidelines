@@ -1,5 +1,6 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Domain.Entities;
+using DGC.Sample.Domain.Enums;
 
 namespace DGC.Sample.Application.Mappings;
 
@@ -12,7 +13,7 @@ public static class OrderMapper
             Id = order.Id,
             CustomerName = order.CustomerName,
             OrderDateUtc = order.OrderDateUtc,
-            Status = order.Status,
+            Status = (OrderStatus)order.Status,
             TotalAmount = order.TotalAmount
         };
     }
@@ -24,7 +25,7 @@ public static class OrderMapper
             Id = id,
             CustomerName = request.CustomerName,
             OrderDateUtc = request.OrderDateUtc,
-            Status = request.Status,
+            Status = (int)request.Status,
             TotalAmount = request.TotalAmount
         };
     }

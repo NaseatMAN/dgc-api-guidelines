@@ -33,7 +33,7 @@ public sealed class OrderServiceTests
             Id = id, 
             CustomerName = "Old Name", 
             OrderDateUtc = DateTime.UtcNow, 
-            Status = OrderStatus.Draft, 
+            Status = (int)OrderStatus.Draft, 
             TotalAmount = 100 
         };
         var updateRequest = new OrderUpdateRequest 

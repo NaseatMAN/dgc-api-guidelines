@@ -10,10 +10,10 @@ public sealed class OrderFilterSpecTests
 {
     private readonly List<Order> _orders =
     [
-        new Order { Id = Guid.NewGuid(), CustomerName = "John Doe", Status = OrderStatus.Draft, OrderDateUtc = DateTime.UtcNow.AddDays(-2) },
-        new Order { Id = Guid.NewGuid(), CustomerName = "Jane Smith", Status = OrderStatus.Fulfilled, OrderDateUtc = DateTime.UtcNow.AddDays(-1) },
-        new Order { Id = Guid.NewGuid(), CustomerName = "Bob Johnson", Status = OrderStatus.Cancelled, OrderDateUtc = DateTime.UtcNow },
-        new Order { Id = Guid.NewGuid(), CustomerName = "Alice Doe", Status = OrderStatus.Draft, OrderDateUtc = DateTime.UtcNow.AddDays(-3) }
+        new Order { Id = Guid.NewGuid(), CustomerName = "John Doe", Status = (int)OrderStatus.Draft, OrderDateUtc = DateTime.UtcNow.AddDays(-2) },
+        new Order { Id = Guid.NewGuid(), CustomerName = "Jane Smith", Status = (int)OrderStatus.Fulfilled, OrderDateUtc = DateTime.UtcNow.AddDays(-1) },
+        new Order { Id = Guid.NewGuid(), CustomerName = "Bob Johnson", Status = (int)OrderStatus.Cancelled, OrderDateUtc = DateTime.UtcNow },
+        new Order { Id = Guid.NewGuid(), CustomerName = "Alice Doe", Status = (int)OrderStatus.Draft, OrderDateUtc = DateTime.UtcNow.AddDays(-3) }
     ];
 
     [Fact]
@@ -28,7 +28,7 @@ public sealed class OrderFilterSpecTests
 
         // Assert
         result.Should().HaveCount(2);
-        result.All(o => o.Status == OrderStatus.Draft).Should().BeTrue();
+        result.All(o => o.Status == (int)OrderStatus.Draft).Should().BeTrue();
     }
 
     [Fact]
