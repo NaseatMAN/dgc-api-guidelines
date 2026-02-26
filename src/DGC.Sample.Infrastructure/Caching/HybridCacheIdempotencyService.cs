@@ -1,5 +1,6 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Persistence;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace DGC.Sample.Infrastructure.Caching;

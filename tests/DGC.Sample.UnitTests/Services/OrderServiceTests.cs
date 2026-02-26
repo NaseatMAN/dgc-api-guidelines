@@ -1,5 +1,6 @@
 using DGC.Sample.Application.Dtos;
-using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Application.Services;
 using DGC.Sample.Domain.Entities;
 using DGC.Sample.Domain.Enums;

@@ -1,5 +1,7 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Mappings;
 
 namespace DGC.Sample.Application.Services;
