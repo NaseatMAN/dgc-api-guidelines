@@ -49,11 +49,18 @@ API → Application → Domain ← Infrastructure
 src/
 ├── ProjectName.Api
 │   ├── Controllers
+│   ├── Extensions
 │   ├── Filters
 │   ├── Middlewares
 │   ├── Attributes
 │   ├── Program.cs
 │   └── appsettings.json
+│
+├── ProjectName.Functions
+│   ├── Extensions
+│   ├── Functions
+│   ├── Program.cs
+│   └── host.json
 │
 ├── ProjectName.Application
 │   ├── Dtos
@@ -77,7 +84,7 @@ src/
 │   │   └── Migrations
 │   ├── Repositories
 │   ├── ExternalServices
-│   └── DependencyInjection
+│   └── Queue
 │
 tests/
 ├── ProjectName.UnitTests
@@ -117,6 +124,7 @@ tests/
 - External service integrations
 - File storage, caching, messaging
 - Implementation of application interfaces
+- No composition-root registrations; DI wiring belongs to entrypoint projects (`Api`/`Functions`)
 
 ---
 

@@ -1,54 +1,16 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
-using DGC.Sample.Application.Interfaces;
-using DGC.Sample.Application.Interfaces.Notifications;
-using DGC.Sample.Application.Interfaces.Repositories;
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Messages;
-using DGC.Sample.Application.Queue.Workers;
-using DGC.Sample.Application.Queue.Workers.Handlers;
-using DGC.Sample.Application.Services;
-using DGC.Sample.Domain.Exceptions.Errors;
+using DGC.Sample.Api.Middlewares;
 using DGC.Sample.Domain.Constants.ApiErrorConstants;
-using DGC.Sample.Infrastructure.DependencyInjection;
+using DGC.Sample.Domain.Exceptions.Errors;
 using Microsoft.AspNetCore.Mvc;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DGC.Sample.Api.Extensions;
 
-public static class ServiceCollectionExtensions
+public static class ApiExtensions
 {
-    public static IServiceCollection AddDgcSampleServices(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        services.AddScoped<DGC.Sample.Application.Interfaces.Repositories.IOrderRepository, OrderService>();
-        services.AddScoped<DGC.Sample.Application.Interfaces.Repositories.IUserRepository, UserService>();
-        services.AddScoped<INotificationChannelSender, EmailNotificationChannelSender>();
-        services.AddScoped<INotificationChannelSender, TelegramNotificationChannelSender>();
-        services.AddScoped<INotificationSenderFactory, NotificationSenderFactory>();
-        services.AddScoped<INotificationService, NotificationService>();
-        services.AddInfrastructure(configuration);
-        services.AddScoped<IMessageHandler<OrderCreatedMessage>, OrderCreatedMessageHandler>();
-        services.AddHostedService<BackgroundOrderCreatedWorker>();
-
-        var redisConnection = configuration.GetConnectionString("Redis");
-        if (!string.IsNullOrWhiteSpace(redisConnection))
-        {
-            services.AddHostedService<BackgroundOrderCreatedRedisWorker>();
-        }
-
-        // Register FluentValidation
-        services.AddValidatorsFromAssemblyContaining<DGC.Sample.Application.Interfaces.Repositories.IOrderRepository>();
-        services.AddFluentValidationAutoValidation();
-
-        return services;
-    }
-
-    public static IServiceCollection AddApiControllersWithAzureValidation(
-        this IServiceCollection services)
+    public static IServiceCollection AddApiControllersWithAzureValidation(this IServiceCollection services)
     {
         services.AddProblemDetails();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, AzureProblemDetailsWriter>());
@@ -100,5 +62,12 @@ public static class ServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    public static IApplicationBuilder UseApiMiddlewares(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<RequestIdMiddleware>();
+        app.UseMiddleware<GlobalExceptionMiddleware>();
+        return app;
     }
 }
