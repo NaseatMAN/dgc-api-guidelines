@@ -3,7 +3,7 @@ using DGC.Sample.Application.Interfaces.Notifications;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Infrastructure.ExternalServices.Notifications;
 using DGC.Sample.Application.Queue.Exceptions;
-using DGC.Sample.Infrastructure.Persistence;
+using DGC.Sample.Infrastructure.Caching;
 using DGC.Sample.Infrastructure.Persistence.Data;
 using DGC.Sample.Infrastructure.Persistence.Repositories;
 using DGC.Sample.Infrastructure.Queue;
@@ -27,10 +27,38 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IIdempotencyService, IdempotencyService>();
+
+        // Redis & Caching
+        services.AddRedisServices(configuration);
+
+        // Caching & Idempotency
+        services.AddHybridCache();
+        services.AddScoped<IIdempotencyService, HybridCacheIdempotencyService>();
+
+        // Redis & Caching
+        services.AddRedisServices(configuration);
+
+        // Caching & Idempotency
+        services.AddHybridCache();
+        services.AddScoped<IIdempotencyService, HybridCacheIdempotencyService>();
+        //services.AddScoped<IIdempotencyService, IdempotencyService>();
         services.AddNotificationServices(configuration);
 
         services.AddQueueServices(configuration);
+
+        return services;
+    }
+
+    private static IServiceCollection AddRedisServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        var redisConnection = configuration.GetConnectionString("Redis");
+        if (string.IsNullOrWhiteSpace(redisConnection))
+        {
+            return services;
+        }
+
+        // Register ConnectionMultiplexer for custom Redis usage (like the Queue)
+        services.TryAddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
 
         return services;
     }
@@ -53,7 +81,6 @@ public static class ServiceCollectionExtensions
         var redisConnection = configuration.GetConnectionString("Redis");
         if (!string.IsNullOrWhiteSpace(redisConnection))
         {
-            services.TryAddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
             services.AddRedisMessageTransport();
         }
 

@@ -406,6 +406,7 @@ coverage-results/*
 .agent/*
 .claude/*
 .github/*
+!.github/copilot-instructions.md
 _bmad/*
 coverage-report/*
 coverage-report-new/*
