@@ -22,6 +22,14 @@ public sealed class UsersController(DGC.Sample.Application.Interfaces.Repositori
         return Ok(users);
     }
 
+    [HttpGet("active")]
+    [ProducesResponseType(typeof(IReadOnlyList<UserResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetActive(CancellationToken cancellationToken)
+    {
+        var users = await _userService.GetActiveUsersAsync(cancellationToken);
+        return Ok(users);
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

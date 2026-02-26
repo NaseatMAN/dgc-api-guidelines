@@ -4,6 +4,7 @@ using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Mappings;
 using DGC.Sample.Domain.Entities;
+using DGC.Sample.Domain.Specifications.Users;
 
 namespace DGC.Sample.Application.Services;
 
@@ -15,6 +16,14 @@ public sealed class UserService(IUnitOfWork unitOfWork) : IUserRepository
     {
         var entityRepository = _unitOfWork.GetEntityRepository<User>();
         var users = entityRepository.QueryAsNoTracking().ToList();
+        return users.Select(UserMapper.ToResponse).ToArray();
+    }
+
+    public async Task<IReadOnlyList<UserResponse>> GetActiveUsersAsync(CancellationToken cancellationToken)
+    {
+        var spec = new UserActiveStatusSpec(true);
+        var entityRepository = _unitOfWork.GetEntityRepository<User>();
+        var users = await entityRepository.GetListAsync(spec, cancellationToken);
         return users.Select(UserMapper.ToResponse).ToArray();
     }
 

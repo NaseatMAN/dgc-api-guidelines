@@ -1,5 +1,6 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Domain.Enums;
 using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Mappings;
@@ -18,6 +19,14 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderRepository
         var orders = entityRepository.QueryAsNoTracking()
             .OrderBy(order => order.OrderDateUtc)
             .ToList();
+        return [.. orders.Select(OrderMapper.ToResponse)];
+    }
+
+    public async Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken)
+    {
+        var spec = new OrderFilterSpec(status, customerName);
+        var entityRepository = _unitOfWork.GetEntityRepository<Order>();
+        var orders = await entityRepository.GetListAsync(spec, cancellationToken);
         return [.. orders.Select(OrderMapper.ToResponse)];
     }
 
@@ -65,7 +74,7 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderRepository
 
         existing.CustomerName = request.CustomerName;
         existing.OrderDateUtc = request.OrderDateUtc;
-        existing.Status = request.Status;
+        existing.Status = (int)request.Status;
         existing.TotalAmount = request.TotalAmount;
 
         entityRepository.Update(existing);
