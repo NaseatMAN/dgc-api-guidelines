@@ -9,5 +9,4 @@ public partial class Order
     public DateTime OrderDateUtc { get; set; }
     public OrderStatus Status { get; set; }
     public decimal TotalAmount { get; set; }
-    public bool IsActive { get; set; } = true;
 }

@@ -1,6 +1,7 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Mappings;
+using DGC.Sample.Domain.Specifications.Users;
 
 namespace DGC.Sample.Application.Services;
 
@@ -12,6 +13,13 @@ public sealed class UserService(IUserRepository userRepository, IUnitOfWork unit
     public async Task<IReadOnlyList<UserResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var users = await _userRepository.GetAllAsync(cancellationToken);
+        return users.Select(UserMapper.ToResponse).ToArray();
+    }
+
+    public async Task<IReadOnlyList<UserResponse>> GetActiveUsersAsync(CancellationToken cancellationToken)
+    {
+        var spec = new UserActiveStatusSpec(true);
+        var users = await _userRepository.GetListAsync(spec, cancellationToken);
         return users.Select(UserMapper.ToResponse).ToArray();
     }
 
