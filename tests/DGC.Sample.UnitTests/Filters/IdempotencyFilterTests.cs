@@ -1,7 +1,6 @@
-using System.Text.Json;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
-using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Persistence;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

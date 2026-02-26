@@ -16,6 +16,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using StackExchange.Redis;
+using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Application.Interfaces.Services;
+using DGC.Sample.Application.Interfaces.Repositories;
 
 namespace DGC.Sample.Infrastructure.DependencyInjection;
 

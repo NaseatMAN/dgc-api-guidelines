@@ -1,6 +1,6 @@
 using DGC.Sample.Application.Interfaces.Repositories;
 
-namespace DGC.Sample.Application.Interfaces
+namespace DGC.Sample.Application.Interfaces.Persistence
 {
     public interface IUnitOfWork : IDisposable
     {

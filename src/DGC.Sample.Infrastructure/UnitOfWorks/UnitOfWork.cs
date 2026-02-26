@@ -1,4 +1,5 @@
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Infrastructure.Persistence.Data;
 using DGC.Sample.Infrastructure.Repositories;
