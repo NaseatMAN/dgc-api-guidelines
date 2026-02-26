@@ -4,6 +4,7 @@ using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
+using DGC.Sample.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DGC.Sample.Api.Controllers;
@@ -27,6 +28,17 @@ public sealed class OrdersController : ControllerBase
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var orders = await _orderService.GetAllAsync(cancellationToken);
+        return Ok(orders);
+    }
+
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(IReadOnlyList<OrderResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Search(
+        [FromQuery] OrderStatus? status,
+        [FromQuery] string? customerName,
+        CancellationToken cancellationToken)
+    {
+        var orders = await _orderService.SearchAsync(status, customerName, cancellationToken);
         return Ok(orders);
     }
 
@@ -64,8 +76,8 @@ public sealed class OrdersController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] OrderUpdateRequest request, CancellationToken cancellationToken)
     {
         var (response, created) = await _orderService.UpsertAsync(id, request, cancellationToken);
-        return created 
-            ? CreatedAtAction(nameof(GetById), new { id = response.Id }, response) 
+        return created
+            ? CreatedAtAction(nameof(GetById), new { id = response.Id }, response)
             : Ok(response);
     }
 

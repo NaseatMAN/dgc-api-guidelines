@@ -1,10 +1,12 @@
 using DGC.Sample.Application.Dtos;
+using DGC.Sample.Domain.Enums;
 
 namespace DGC.Sample.Application.Interfaces;
 
 public interface IOrderService
 {
     Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken);
     Task<IReadOnlyList<OrderResponse>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken);
     Task<OrderResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<OrderResponse> CreateAsync(OrderCreateRequest request, CancellationToken cancellationToken);

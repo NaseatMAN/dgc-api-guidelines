@@ -1,7 +1,7 @@
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Domain.Enums;
 using DGC.Sample.Application.Mappings;
-using DGC.Sample.Domain.Entities;
 using DGC.Sample.Domain.Specifications.Orders;
 
 namespace DGC.Sample.Application.Services;
@@ -14,6 +14,13 @@ public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork u
     public async Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var orders = await _orderRepository.GetAllAsync(cancellationToken);
+        return [.. orders.Select(OrderMapper.ToResponse)];
+    }
+
+    public async Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken)
+    {
+        var spec = new OrderFilterSpec(status, customerName);
+        var orders = await _orderRepository.GetListAsync(spec, cancellationToken);
         return [.. orders.Select(OrderMapper.ToResponse)];
     }
 
