@@ -56,7 +56,7 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         {
             var timeoutSeconds = (int)Math.Ceiling(waitMs / 1000d);
             var result = await _database.ExecuteAsync("BRPOPLPUSH", queueKey, processingKey, timeoutSeconds).ConfigureAwait(false);
-            payload = result.ToString();
+            payload = result.IsNull ? RedisValue.Null : (string?)result;
         }
 
         if (payload.IsNullOrEmpty)

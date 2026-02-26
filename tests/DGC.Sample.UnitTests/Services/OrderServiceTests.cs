@@ -12,12 +12,14 @@ namespace DGC.Sample.UnitTests.Services;
 public sealed class OrderServiceTests
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly OrderService _orderService;
 
     public OrderServiceTests()
     {
         _orderRepository = Substitute.For<IOrderRepository>();
-        _orderService = new OrderService(_orderRepository);
+        _unitOfWork = Substitute.For<IUnitOfWork>();
+        _orderService = new OrderService(_orderRepository, _unitOfWork);
     }
 
     [Fact]
@@ -50,7 +52,8 @@ public sealed class OrderServiceTests
         created.Should().BeFalse();
         response.CustomerName.Should().Be("New Name");
         response.TotalAmount.Should().Be(200);
-        await _orderRepository.Received(1).UpdateAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+        _orderRepository.Received(1).Update(Arg.Any<Order>());
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -75,6 +78,7 @@ public sealed class OrderServiceTests
         created.Should().BeTrue();
         response.Id.Should().Be(id);
         response.CustomerName.Should().Be("New Name");
-        await _orderRepository.Received(1).AddAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+        _orderRepository.Received(1).Add(Arg.Any<Order>());
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

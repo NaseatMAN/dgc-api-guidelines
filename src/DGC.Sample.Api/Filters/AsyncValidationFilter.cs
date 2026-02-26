@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using DGC.Sample.Domain.Exceptions.Errors;
 
 namespace DGC.Sample.Api.Filters;

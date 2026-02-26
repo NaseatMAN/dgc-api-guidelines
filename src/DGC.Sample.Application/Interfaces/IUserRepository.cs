@@ -1,8 +1,9 @@
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Domain.Entities;
 
 namespace DGC.Sample.Application.Interfaces;
 
-public interface IUserRepository
+public interface IUserRepository : IRepository<User>
 {
     Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken);
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);

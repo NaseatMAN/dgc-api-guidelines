@@ -1,6 +1,7 @@
 using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Domain.Constants.ApiErrorConstants;
 using System.Text.Json;
+using DGC.Sample.Domain.Exceptions;
 
 namespace DGC.Sample.Api.Extensions;
 
@@ -21,6 +22,7 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
 
         // Map ProblemDetails to AzureError
         var errorCode = problem.Extensions.TryGetValue("code", out var code) && code is string s ? s : null;
+        var isVersioningError = false;
 
         if (string.IsNullOrEmpty(errorCode))
         {
@@ -37,37 +39,53 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
                     "unsupportedApiVersion" => VersioningErrorCode.UnsupportedApiVersionValue,
                     _ => typeFragment
                 };
+                isVersioningError = true;
             }
             else
             {
                 errorCode = problem.Status?.ToString() ?? "InternalServerError";
             }
         }
+        else if (errorCode == VersioningErrorCode.MissingApiVersionParameter || errorCode == VersioningErrorCode.UnsupportedApiVersionValue)
+        {
+            isVersioningError = true;
+        }
 
         var message = problem.Detail ?? problem.Title ?? "An error occurred.";
 
         // Override messages for versioning errors to match Azure Guidelines exactly
-        if (errorCode == VersioningErrorCode.MissingApiVersionParameter)
+        if (isVersioningError)
         {
-            message = "The api-version query parameter (?api-version=) is required for all requests";
-        }
-        else if (errorCode == VersioningErrorCode.UnsupportedApiVersionValue)
-        {
-            // For unsupported version, try to get the requested version if available
-            var requestedVersion = problem.Extensions.TryGetValue("apiVersion", out var v) ? v?.ToString() : null;
-
-            if (string.IsNullOrEmpty(requestedVersion))
+            if (errorCode == VersioningErrorCode.MissingApiVersionParameter)
             {
-                // Fallback to query string
-                requestedVersion = httpContext.Request.Query["api-version"].ToString();
+                message = "The api-version query parameter (?api-version=) is required for all requests";
+            }
+            else if (errorCode == VersioningErrorCode.UnsupportedApiVersionValue)
+            {
+                // For unsupported version, try to get the requested version if available
+                var requestedVersion = problem.Extensions.TryGetValue("apiVersion", out var v) ? v?.ToString() : null;
+
+                if (string.IsNullOrEmpty(requestedVersion))
+                {
+                    // Fallback to query string
+                    requestedVersion = httpContext.Request.Query["api-version"].ToString();
+                }
+
+                if (string.IsNullOrEmpty(requestedVersion))
+                {
+                    requestedVersion = "unknown";
+                }
+
+                message = $"Unsupported api-version '{requestedVersion}'.";
             }
 
-            if (string.IsNullOrEmpty(requestedVersion))
-            {
-                requestedVersion = "unknown";
-            }
-
-            message = $"Unsupported api-version '{requestedVersion}'.";
+            // Throw BadRequestException to be caught by GlobalExceptionMiddleware
+            throw new BadRequestException(
+                code: errorCode!,
+                message: message,
+                target: problem.Instance,
+                azureErrorDetails: null,
+                azureInnerError: new AzureInnerError(TraceId: httpContext.TraceIdentifier));
         }
 
         var azureError = new AzureError(

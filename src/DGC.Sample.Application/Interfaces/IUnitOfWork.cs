@@ -1,11 +1,11 @@
-using DGC.Sample.Application.Interfaces.Repositoies;
+using DGC.Sample.Application.Interfaces.Repositories;
 
 namespace DGC.Sample.Application.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
         // Repository access
-        T GetRepository<T>() where T : class, IBaseRepository<T>;
+        TRepository GetRepository<TRepository>() where TRepository : class;
         IRepository<T> GetEntityRepository<T>() where T : class;
 
         // Unit of Work operations
