@@ -1,8 +1,6 @@
 using DGC.Sample.Application.Interfaces.Notifications;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Services;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 
 namespace DGC.Sample.Api.Extensions;
 
@@ -16,9 +14,6 @@ public static class ApplicationExtensions
         services.AddScoped<INotificationChannelSender, TelegramNotificationChannelSender>();
         services.AddScoped<INotificationSenderFactory, NotificationSenderFactory>();
         services.AddScoped<INotificationService, NotificationService>();
-
-        services.AddValidatorsFromAssemblyContaining<IOrderRepository>();
-        services.AddFluentValidationAutoValidation();
 
         return services;
     }
