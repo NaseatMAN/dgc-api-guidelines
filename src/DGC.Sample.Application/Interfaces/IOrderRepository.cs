@@ -7,4 +7,5 @@ public interface IOrderRepository : IRepository<Order>
 {
     Task<IReadOnlyList<Order>> GetAllAsync(CancellationToken cancellationToken);
     Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<Order?> GetWithItemsByIdAsync(Guid id, CancellationToken ct);
 }
