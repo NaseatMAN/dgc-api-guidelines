@@ -8,7 +8,11 @@ public interface IMessageQueueTransport<T>
 
     Task EnqueueAsync(T item, CancellationToken token = default);
 
+    Task EnqueueAsync(T item, string? queueName, CancellationToken token = default);
+
     Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default);
+
+    Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default);
 
     Task AcknowledgeAsync(string envelopeId, CancellationToken token = default);
 

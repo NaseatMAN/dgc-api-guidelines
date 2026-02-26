@@ -1,6 +1,20 @@
-@DGC.Sample.Api_HostAddress = http://localhost:5288
+@DGC.Sample.Api_HostAddress = https://localhost:5288
+@ApiVersion = 2026-02-05
+@IdempotencyKey = sample-azure-queue-publish-001
 
-GET {{DGC.Sample.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Create order
+POST {{DGC.Sample.Api_HostAddress}}/orders?api-version={{ApiVersion}}
+Content-Type: application/json
+Idempotency-Key: {{IdempotencyKey}}
 
-###
+{
+	"customerName": "Contoso Ltd",
+	"orderDateUtc": "2026-02-21T08:30:00Z",
+	"status": 1,
+	"totalAmount": 2500.00
+}
+
+### Publish existing order to Azure queue transport for Function processing
+# Replace {orderId} with the created order id from the previous request response.
+POST {{DGC.Sample.Api_HostAddress}}/orders/{orderId}/publish-azure?api-version={{ApiVersion}}&queueName=orders
+Idempotency-Key: sample-azure-queue-publish-002

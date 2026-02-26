@@ -23,7 +23,7 @@ public sealed class InMemoryMessageQueueTransportTests
         var transport = new InMemoryMessageQueueTransport<TestMessage>();
         var payload = new TestMessage("hello");
 
-        await transport.EnqueueAsync(payload, default);
+        await transport.EnqueueAsync(payload, CancellationToken.None);
         var dequeued = await transport.DequeueAsync(waitMs: 0, token: default);
 
         dequeued.Should().NotBeNull();
@@ -34,7 +34,7 @@ public sealed class InMemoryMessageQueueTransportTests
     public async Task HandleProcessingErrorAsync_WhenRetryExceeded_ShouldMoveToDeadLetterQueue()
     {
         var transport = new InMemoryMessageQueueTransport<TestMessage>();
-        await transport.EnqueueAsync(new TestMessage("retry"), default);
+        await transport.EnqueueAsync(new TestMessage("retry"), CancellationToken.None);
 
         var dequeued = await transport.DequeueAsync(waitMs: 0, token: default);
         dequeued.Should().NotBeNull();
@@ -48,6 +48,18 @@ public sealed class InMemoryMessageQueueTransportTests
             token: default);
 
         transport.DeadLetterCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task EnqueueAsync_WithQueueName_ShouldIsolateFromDefaultQueue()
+    {
+        var transport = new InMemoryMessageQueueTransport<TestMessage>();
+
+        await transport.EnqueueAsync(new TestMessage("named"), "priority", CancellationToken.None);
+
+        var dequeued = await transport.DequeueAsync(waitMs: 0, token: default);
+
+        dequeued.Should().BeNull();
     }
 
     private sealed class TestMessage

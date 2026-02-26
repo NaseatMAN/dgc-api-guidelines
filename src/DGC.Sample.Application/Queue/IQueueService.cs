@@ -7,8 +7,20 @@ public interface IQueueService
         QueueTransport? transport = null,
         CancellationToken cancellationToken = default);
 
+    Task EnqueueAsync<T>(
+        T item,
+        QueueTransport? transport,
+        string? queueName,
+        CancellationToken cancellationToken = default);
+
     Task<T?> DequeueAsync<T>(
         QueueTransport? transport = null,
+        CancellationToken cancellationToken = default)
+        where T : class;
+
+    Task<T?> DequeueAsync<T>(
+        QueueTransport? transport,
+        string? queueName,
         CancellationToken cancellationToken = default)
         where T : class;
 }

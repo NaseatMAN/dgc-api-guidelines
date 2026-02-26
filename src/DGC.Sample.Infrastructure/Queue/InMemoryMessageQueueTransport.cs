@@ -6,29 +6,43 @@ namespace DGC.Sample.Infrastructure.Queue;
 
 public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
 {
-    private readonly ConcurrentQueue<Envelope<T>> _queue = new();
-    private readonly ConcurrentDictionary<string, Envelope<T>> _inflight = new();
-    private readonly ConcurrentQueue<Envelope<T>> _deadLetterQueue = new();
-    private readonly SemaphoreSlim _signal = new(0);
+    private readonly ConcurrentDictionary<string, QueueState> _queues = new();
+    private readonly ConcurrentDictionary<string, (string QueueKey, Envelope<T> Envelope)> _inflight = new();
 
     public QueueTransport TransportType => QueueTransport.InMemory;
 
     public Task EnqueueAsync(T item, CancellationToken token = default)
     {
+        return EnqueueAsync(item, queueName: null, token);
+    }
+
+    public Task EnqueueAsync(T item, string? queueName, CancellationToken token = default)
+    {
         token.ThrowIfCancellationRequested();
 
+        var queueKey = GetQueueKey(queueName);
+        var queueState = GetQueueState(queueKey);
+
         var envelope = CreateEnvelope(item);
-        _queue.Enqueue(envelope);
-        _signal.Release();
+        queueState.Queue.Enqueue(envelope);
+        queueState.Signal.Release();
 
         return Task.CompletedTask;
     }
 
     public async Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
     {
-        if (_queue.TryDequeue(out var immediateEnvelope))
+        return await DequeueAsync(waitMs, queueName: null, token).ConfigureAwait(false);
+    }
+
+    public async Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+    {
+        var queueKey = GetQueueKey(queueName);
+        var queueState = GetQueueState(queueKey);
+
+        if (queueState.Queue.TryDequeue(out var immediateEnvelope))
         {
-            _inflight[immediateEnvelope.Id] = immediateEnvelope;
+            _inflight[immediateEnvelope.Id] = (queueKey, immediateEnvelope);
             return immediateEnvelope;
         }
 
@@ -37,18 +51,18 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
             return null;
         }
 
-        var acquired = await _signal.WaitAsync(waitMs, token).ConfigureAwait(false);
+        var acquired = await queueState.Signal.WaitAsync(waitMs, token).ConfigureAwait(false);
         if (!acquired)
         {
             return null;
         }
 
-        if (!_queue.TryDequeue(out var envelope))
+        if (!queueState.Queue.TryDequeue(out var envelope))
         {
             return null;
         }
 
-        _inflight[envelope.Id] = envelope;
+        _inflight[envelope.Id] = (queueKey, envelope);
         return envelope;
     }
 
@@ -67,7 +81,13 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
         Exception exception,
         CancellationToken token = default)
     {
-        _inflight.TryRemove(envelope.Id, out _);
+        var queueKey = GetQueueKey(queueName: null);
+        if (_inflight.TryRemove(envelope.Id, out var inflight))
+        {
+            queueKey = inflight.QueueKey;
+        }
+
+        var queueState = GetQueueState(queueKey);
 
         envelope.DeliveryCount++;
         envelope.LastAttemptAt = DateTimeOffset.UtcNow;
@@ -75,7 +95,7 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
 
         if (envelope.DeliveryCount > retryLimit)
         {
-            _deadLetterQueue.Enqueue(envelope);
+            queueState.DeadLetterQueue.Enqueue(envelope);
             logger.LogError(
                 exception,
                 "Message moved to in-memory dead-letter queue. envelopeId={EnvelopeId} messageType={MessageType}",
@@ -95,11 +115,11 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
             await Task.Delay(retryDelayMs, token).ConfigureAwait(false);
         }
 
-        _queue.Enqueue(envelope);
-        _signal.Release();
+        queueState.Queue.Enqueue(envelope);
+        queueState.Signal.Release();
     }
 
-    public int DeadLetterCount => _deadLetterQueue.Count;
+    public int DeadLetterCount => _queues.Values.Sum(state => state.DeadLetterQueue.Count);
 
     private static Envelope<T> CreateEnvelope(T item)
     {
@@ -110,5 +130,30 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
             enqueuedAt: DateTimeOffset.UtcNow,
             typeName: typeof(T).FullName ?? typeof(T).Name,
             schemaVersion: 1);
+    }
+
+    private QueueState GetQueueState(string queueKey)
+    {
+        return _queues.GetOrAdd(queueKey, _ => new QueueState());
+    }
+
+    private static string GetQueueKey(string? queueName)
+    {
+        var messageName = typeof(T).Name.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(queueName))
+        {
+            return $"queue:{messageName}";
+        }
+
+        return $"queue:{queueName.Trim().ToLowerInvariant()}:{messageName}";
+    }
+
+    private sealed class QueueState
+    {
+        public ConcurrentQueue<Envelope<T>> Queue { get; } = new();
+
+        public ConcurrentQueue<Envelope<T>> DeadLetterQueue { get; } = new();
+
+        public SemaphoreSlim Signal { get; } = new(0);
     }
 }
