@@ -78,10 +78,17 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddQueueServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.TryAddSingleton(configuration);
+
         var defaultTransportRaw = configuration["Queue:DefaultTransport"];
         var defaultTransport = Enum.TryParse<QueueTransport>(defaultTransportRaw, true, out var parsedTransport)
             ? parsedTransport
             : QueueTransport.InMemory;
+
+        var azureStorageConnection = configuration["AzureWebJobsStorage"]
+            ?? configuration.GetConnectionString("AzureWebJobsStorage");
+        var azureQueueName = configuration["Queue:Azure:QueueName"]
+            ?? configuration["AzureFunctions:QueueName"];
 
         services.TryAddSingleton(new QueueServiceOptions
         {
@@ -95,6 +102,16 @@ public static class ServiceCollectionExtensions
         if (!string.IsNullOrWhiteSpace(redisConnection))
         {
             services.AddRedisMessageTransport();
+        }
+
+        if (!string.IsNullOrWhiteSpace(azureStorageConnection) && !string.IsNullOrWhiteSpace(azureQueueName))
+        {
+            services.AddAzureQueueMessageTransport();
+        }
+        else if (defaultTransport == QueueTransport.AzureQueue)
+        {
+            throw new TransportInitializationException(
+                "Queue:DefaultTransport is set to AzureQueue, but required configuration is missing. Set 'AzureWebJobsStorage' and 'Queue:Azure:QueueName' (or 'AzureFunctions:QueueName').");
         }
 
         services.TryAddSingleton(typeof(ITransportResolver<>), typeof(TransportResolver<>));
@@ -113,6 +130,14 @@ public static class ServiceCollectionExtensions
 
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton(typeof(IMessageQueueTransport<>), typeof(RedisMessageQueueTransport<>)));
+
+        return services;
+    }
+
+    public static IServiceCollection AddAzureQueueMessageTransport(this IServiceCollection services)
+    {
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton(typeof(IMessageQueueTransport<>), typeof(AzureStorageMessageQueueTransport<>)));
 
         return services;
     }

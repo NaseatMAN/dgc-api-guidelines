@@ -214,6 +214,12 @@ Current keys moved to User Secrets:
 
 - `ConnectionStrings:DefaultConnection`
 - `ConnectionStrings:Redis`
+- `AzureWebJobsStorage` (when API publishes to Azure queue)
+- `Queue:Azure:QueueName` (queue used by API Azure transport)
+
+For Azure Function queue integration (local mock/default setup), also use:
+- `AzureWebJobsStorage`
+- `AzureFunctions:QueueName`
 
 Set mock values from command line:
 
@@ -221,8 +227,44 @@ Set mock values from command line:
 cd src/DGC.Sample.Api
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
 dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379,abortConnect=false"
+dotnet user-secrets set "AzureWebJobsStorage" "UseDevelopmentStorage=true"
+dotnet user-secrets set "Queue:Azure:QueueName" "orders"
+dotnet user-secrets list
+
+cd ..\DGC.Sample.Functions
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
+dotnet user-secrets set "AzureWebJobsStorage" "UseDevelopmentStorage=true"
+dotnet user-secrets set "AzureFunctions:QueueName" "orders"
 dotnet user-secrets list
 ```
+
+Notes:
+- `AzureWebJobsStorage` is required by Azure Functions queue triggers and should remain secret-backed outside source control.
+- Use `UseDevelopmentStorage=true` as a local mock/default value (Azurite/local emulator scenario).
+- `AzureFunctions:QueueName` should be lowercase and compatible with Azure queue naming rules.
+- API Azure transport uses `Queue:Azure:QueueName` (falls back to `AzureFunctions:QueueName`).
+
+Run the Function host locally:
+
+```bash
+dotnet run --project src/DGC.Sample.Functions
+```
+
+Sample API -> Azure Queue -> Function flow:
+
+1. Run API: `dotnet run --project src/DGC.Sample.Api`
+2. Run Function host: `dotnet run --project src/DGC.Sample.Functions`
+3. Create an order, then publish it via API endpoint:
+  - `POST /orders/{id}/publish-azure?api-version=2026-02-05&queueName=orders`
+  - Header: `Idempotency-Key: <any-unique-value>`
+
+You can route to different Azure queues per message by changing `queueName` (for same or different object types).
+
+Worker queue consumption can also target named queues via configuration:
+- `WorkerQueueSettings:BackgroundOrderCreated:QueueName`
+- `WorkerQueueSettings:BackgroundOrderCreatedRedis:QueueName`
+
+When omitted/empty, workers consume the default queue for their transport.
 
 ---
 

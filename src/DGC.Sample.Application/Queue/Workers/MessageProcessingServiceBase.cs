@@ -26,15 +26,17 @@ public abstract class MessageProcessingServiceBase<T>(
         var section = startupConfiguration.GetSection($"WorkerQueueSettings:{WorkerName}");
         var pollIntervalSeconds = Math.Max(1, section.GetValue<int?>("PollIntervalSeconds") ?? 1);
         var maxParallelism = Math.Max(1, section.GetValue<int?>("MaxDegreeOfParallelism") ?? 1);
+        var queueName = section.GetValue<string>("QueueName");
 
         using var semaphore = new SemaphoreSlim(maxParallelism, maxParallelism);
         var inFlight = new HashSet<Task>();
         var transport = _transportResolver.Resolve(Transport);
 
         _logger.LogInformation(
-            "Worker {WorkerName} started with transport={Transport} pollInterval={PollIntervalSeconds}s maxParallelism={MaxParallelism}",
+            "Worker {WorkerName} started with transport={Transport} queueName={QueueName} pollInterval={PollIntervalSeconds}s maxParallelism={MaxParallelism}",
             WorkerName,
             Transport,
+            string.IsNullOrWhiteSpace(queueName) ? "(default)" : queueName,
             pollIntervalSeconds,
             maxParallelism);
 
@@ -44,7 +46,7 @@ public abstract class MessageProcessingServiceBase<T>(
 
             using (var scope = _scopeFactory.CreateScope())
             {
-                envelope = await transport.DequeueAsync(pollIntervalSeconds * 1000, stoppingToken).ConfigureAwait(false);
+                envelope = await transport.DequeueAsync(pollIntervalSeconds * 1000, queueName, stoppingToken).ConfigureAwait(false);
             }
 
             if (envelope is null)

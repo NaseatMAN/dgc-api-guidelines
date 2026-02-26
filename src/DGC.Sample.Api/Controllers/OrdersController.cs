@@ -81,6 +81,38 @@ public sealed class OrdersController : ControllerBase
             : Ok(response);
     }
 
+    [HttpPost("{id:guid}/publish-azure")]
+    [ServiceFilter(typeof(IdempotencyFilter))]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PublishToAzureQueue(
+        Guid id,
+        [FromQuery] string? queueName,
+        CancellationToken cancellationToken)
+    {
+        var order = await _orderService.GetByIdAsync(id, cancellationToken);
+        if (order is null)
+        {
+            return NotFound();
+        }
+
+        var message = new OrderCreatedMessage(
+            order.Id,
+            order.CustomerName,
+            order.TotalAmount,
+            new DateTimeOffset(DateTime.SpecifyKind(order.OrderDateUtc, DateTimeKind.Utc)));
+
+        await _queueService.EnqueueAsync(message, QueueTransport.AzureQueue, queueName, cancellationToken);
+
+        return Accepted(new
+        {
+            orderId = order.Id,
+            transport = QueueTransport.AzureQueue.ToString(),
+            queueName,
+            queuedAtUtc = DateTimeOffset.UtcNow
+        });
+    }
+
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
