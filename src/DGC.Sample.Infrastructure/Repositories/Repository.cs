@@ -1,8 +1,7 @@
-using DGC.Sample.Application.Interfaces.Repositoies;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace DGC.Sample.Infrastructure.Repositories
 {

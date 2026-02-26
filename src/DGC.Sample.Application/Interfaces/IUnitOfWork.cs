@@ -1,4 +1,4 @@
-using DGC.Sample.Application.Interfaces.Repositoies;
+using DGC.Sample.Application.Interfaces.Repositories;
 
 namespace DGC.Sample.Application.Interfaces
 {

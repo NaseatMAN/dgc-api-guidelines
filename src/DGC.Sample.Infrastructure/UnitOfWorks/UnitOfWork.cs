@@ -1,5 +1,5 @@
 using DGC.Sample.Application.Interfaces;
-using DGC.Sample.Application.Interfaces.Repositoies;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
