@@ -2,10 +2,9 @@ using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Domain.Entities;
 using DGC.Sample.Domain.Specifications.Orders;
 using DGC.Sample.Infrastructure.Persistence.Data;
-using DGC.Sample.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace DGC.Sample.Infrastructure.Persistence.Repositories;
+namespace DGC.Sample.Infrastructure.Persistence.Repositories.Purchases;
 
 public sealed class OrderRepository(AppDbContext dbContext) : Repository<Order>(dbContext)
 {

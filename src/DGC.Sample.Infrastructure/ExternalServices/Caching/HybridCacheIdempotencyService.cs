@@ -1,5 +1,5 @@
+using DGC.Sample.Application.Common;
 using DGC.Sample.Application.Dtos;
-using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Persistence;
 using Microsoft.Extensions.Caching.Hybrid;
 
@@ -16,10 +16,7 @@ public sealed class HybridCacheIdempotencyService(HybridCache cache) : IIdempote
     {
         var cacheKey = $"{CacheKeyPrefix}{idempotencyKey}";
 
-        return await _cache.GetOrCreateAsync(
-            cacheKey,
-            _ => ValueTask.FromResult<IdempotencyResult?>(null),
-            cancellationToken: cancellationToken);
+        return await _cache.GetAsync<IdempotencyResult?>(cacheKey, cancellationToken);
     }
 
     public async Task<bool> TryStartRequestAsync(string idempotencyKey, CancellationToken cancellationToken)

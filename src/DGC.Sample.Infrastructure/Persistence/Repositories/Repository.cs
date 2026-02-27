@@ -4,7 +4,7 @@ using DGC.Sample.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace DGC.Sample.Infrastructure.Repositories
+namespace DGC.Sample.Infrastructure.Persistence.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity>
         where TEntity : class

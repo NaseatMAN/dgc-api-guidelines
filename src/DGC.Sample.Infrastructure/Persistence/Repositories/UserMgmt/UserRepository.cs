@@ -1,12 +1,10 @@
-using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Domain.Entities;
 using DGC.Sample.Infrastructure.Persistence.Data;
-using DGC.Sample.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace DGC.Sample.Infrastructure.Persistence.Repositories;
-
-public sealed class UserRepository(AppDbContext dbContext) : Repository<User>(dbContext)
+namespace DGC.Sample.Infrastructure.Persistence.Repositories.UserMgmt;
+public sealed class UserRepository(AppDbContext dbContext) : Repository<User>(dbContext), IRepository<User>
 {
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -21,5 +19,10 @@ public sealed class UserRepository(AppDbContext dbContext) : Repository<User>(db
     public async Task<User?> GetByNationalIdAsync(string nationalId, CancellationToken cancellationToken)
     {
         return await Query().FirstOrDefaultAsync(u => u.NationalId == nationalId, cancellationToken);
+    }
+
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        return await Query().FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 }
