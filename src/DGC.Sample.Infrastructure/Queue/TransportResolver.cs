@@ -1,5 +1,6 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
+using DGC.Sample.Domain.Exceptions;
 
 namespace DGC.Sample.Infrastructure.Queue;
 
@@ -20,8 +21,10 @@ public sealed class TransportResolver<T> : ITransportResolver<T>
 
         if (duplicates.Length > 0)
         {
-            throw new TransportInitializationException(
-                $"Duplicate queue transports registered for message type '{typeof(T).Name}': {string.Join(", ", duplicates)}");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                $"Duplicate queue transports registered for message type '{typeof(T).Name}': {string.Join(", ", duplicates)}",
+                azureErrorDetails: null);
         }
 
         _map = byType.ToDictionary(pair => pair.Key, pair => pair.Value[0]);
@@ -31,7 +34,10 @@ public sealed class TransportResolver<T> : ITransportResolver<T>
     {
         return _map.TryGetValue(transport, out var transportImpl)
             ? transportImpl
-            : throw new TransportNotRegisteredException(transport, typeof(T));
+            : throw new InternalErrorException(
+                InternalErrorCode.QueueTransportNotRegistered,
+                $"Queue transport '{transport}' is not registered for message type '{typeof(T).Name}'.",
+                azureErrorDetails: null);
     }
 
     public bool TryResolve(QueueTransport transport, out IMessageQueueTransport<T>? transportImpl)

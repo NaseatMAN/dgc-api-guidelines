@@ -1,6 +1,6 @@
 using System.Text.Json;
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Messages;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 

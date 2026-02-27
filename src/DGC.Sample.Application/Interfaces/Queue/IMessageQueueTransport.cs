@@ -1,6 +1,8 @@
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
 using Microsoft.Extensions.Logging;
 
-namespace DGC.Sample.Application.Queue;
+namespace DGC.Sample.Application.Interfaces.Queue;
 
 public interface IMessageQueueTransport<T>
 {

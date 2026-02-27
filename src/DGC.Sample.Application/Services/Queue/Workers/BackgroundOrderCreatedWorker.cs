@@ -1,11 +1,12 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Messages;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace DGC.Sample.Application.Queue.Workers;
+namespace DGC.Sample.Application.Services.Queue.Workers;
 
-public sealed class BackgroundOrderCreatedRedisWorker(
+public sealed class BackgroundOrderCreatedWorker(
     IServiceScopeFactory scopeFactory,
     ITransportResolver<OrderCreatedMessage> transportResolver,
     ILogger<MessageProcessingServiceBase<OrderCreatedMessage>> logger)
@@ -14,9 +15,9 @@ public sealed class BackgroundOrderCreatedRedisWorker(
         transportResolver,
         logger)
 {
-    protected override string WorkerName => "BackgroundOrderCreatedRedis";
+    protected override string WorkerName => "BackgroundOrderCreated";
 
-    protected override QueueTransport Transport => QueueTransport.Redis;
+    protected override QueueTransport Transport => QueueTransport.InMemory;
 
     protected override async Task ProcessMessageAsync(
         IServiceProvider serviceProvider,

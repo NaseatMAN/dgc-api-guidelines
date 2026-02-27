@@ -1,8 +1,9 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
-using DGC.Sample.Application.Queue.Messages;
-using DGC.Sample.Application.Queue.Workers;
-using DGC.Sample.Application.Queue.Workers.Handlers;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
+using DGC.Sample.Application.Services.Queue.Handlers;
+using DGC.Sample.Application.Services.Queue.Workers;
+using DGC.Sample.Domain.Exceptions;
 using DGC.Sample.Infrastructure.Queue;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using StackExchange.Redis;
@@ -48,8 +49,10 @@ public static class QueueExtensions
         }
         else if (defaultTransport == QueueTransport.AzureQueue)
         {
-            throw new TransportInitializationException(
-                "Queue:DefaultTransport is set to AzureQueue, but required configuration is missing. Set 'AzureWebJobsStorage' and 'Queue:Azure:QueueName' (or 'AzureFunctions:QueueName').");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Queue:DefaultTransport is set to AzureQueue, but required configuration is missing. Set 'AzureWebJobsStorage' and 'Queue:Azure:QueueName' (or 'AzureFunctions:QueueName').",
+                azureErrorDetails: null);
         }
 
         services.TryAddSingleton(typeof(ITransportResolver<>), typeof(TransportResolver<>));

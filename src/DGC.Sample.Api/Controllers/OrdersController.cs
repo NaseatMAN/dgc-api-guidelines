@@ -1,10 +1,11 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
+using DGC.Sample.Application.Common.Queue;
 using DGC.Sample.Application.Dtos;
+using DGC.Sample.Application.Dtos.Queue;
 using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.Queue;
 using DGC.Sample.Application.Interfaces.Services;
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 

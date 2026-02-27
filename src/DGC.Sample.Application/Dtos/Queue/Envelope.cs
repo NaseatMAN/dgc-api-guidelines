@@ -1,4 +1,4 @@
-namespace DGC.Sample.Application.Queue;
+namespace DGC.Sample.Application.Dtos.Queue;
 
 public sealed record Envelope<T>
 {

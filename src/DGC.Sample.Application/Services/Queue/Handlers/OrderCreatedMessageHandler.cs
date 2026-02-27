@@ -1,8 +1,9 @@
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using DGC.Sample.Application.Interfaces.Services;
-using DGC.Sample.Application.Queue.Messages;
 using Microsoft.Extensions.Logging;
 
-namespace DGC.Sample.Application.Queue.Workers.Handlers;
+namespace DGC.Sample.Application.Services.Queue.Handlers;
 
 public sealed class OrderCreatedMessageHandler(IOrderService orderService, ILogger<OrderCreatedMessageHandler> logger) : IMessageHandler<OrderCreatedMessage>
 {

@@ -1,4 +1,4 @@
-namespace DGC.Sample.Application.Queue.Messages;
+namespace DGC.Sample.Application.Dtos.Queue;
 
 public sealed class OrderCreatedMessage
 {

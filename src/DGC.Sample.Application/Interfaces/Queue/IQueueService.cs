@@ -1,4 +1,6 @@
-namespace DGC.Sample.Application.Queue;
+using DGC.Sample.Application.Common.Queue;
+
+namespace DGC.Sample.Application.Interfaces.Queue;
 
 public interface IQueueService
 {

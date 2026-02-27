@@ -1,4 +1,5 @@
-using DGC.Sample.Application.Queue;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using DGC.Sample.Infrastructure.Queue;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;

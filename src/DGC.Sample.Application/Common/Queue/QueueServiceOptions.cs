@@ -1,4 +1,4 @@
-namespace DGC.Sample.Application.Queue;
+namespace DGC.Sample.Application.Common.Queue;
 
 public sealed class QueueServiceOptions
 {

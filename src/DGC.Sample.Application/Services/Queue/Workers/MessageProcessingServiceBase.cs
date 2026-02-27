@@ -1,9 +1,12 @@
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
-namespace DGC.Sample.Application.Queue.Workers;
+namespace DGC.Sample.Application.Services.Queue.Workers;
 
 public abstract class MessageProcessingServiceBase<T>(
     IServiceScopeFactory scopeFactory,

@@ -1,6 +1,8 @@
 using System.Text.Json;
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
+using DGC.Sample.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -36,9 +38,11 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
 
         if (payload.Length > _maxPayloadBytes)
         {
-            throw new QueueProcessingException(
+            throw new InternalErrorException(
+                InternalErrorCode.QueueProcessingError,
                 $"Queue payload exceeds max allowed bytes ({_maxPayloadBytes}).",
-                new InvalidOperationException("Payload too large"));
+                innerCode: "payload_too_large",
+                innerMessage: "Queue payload size is larger than configured maximum.");
         }
 
         var queueKey = GetQueueKey(queueName);
@@ -181,7 +185,11 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         }
         catch (JsonException ex)
         {
-            throw new QueueProcessingException("Failed to deserialize queue envelope.", ex);
+            throw new InternalErrorException(
+                InternalErrorCode.QueueProcessingError,
+                "Failed to deserialize queue envelope.",
+                innerCode: ex.GetType().Name,
+                innerMessage: ex.Message);
         }
     }
 

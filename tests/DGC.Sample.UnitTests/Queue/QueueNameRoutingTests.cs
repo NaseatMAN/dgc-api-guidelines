@@ -1,5 +1,7 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
+using DGC.Sample.Domain.Exceptions;
 using DGC.Sample.Infrastructure.Queue;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -45,7 +47,8 @@ public sealed class QueueNameRoutingTests
 
         var act = () => transport.EnqueueAsync(new TestMessage("queued"), "Orders_Upper", CancellationToken.None);
 
-        await act.Should().ThrowAsync<TransportInitializationException>();
+        var exception = (await act.Should().ThrowAsync<InternalErrorException>()).Which;
+        exception.ResponseBody.Error.Code.Should().Be(InternalErrorCode.QueueTransportInitializationError);
     }
 
     private sealed record TestMessage(string Value);

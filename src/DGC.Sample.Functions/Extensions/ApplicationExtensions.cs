@@ -1,8 +1,8 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Messages;
-using DGC.Sample.Application.Queue.Workers.Handlers;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Application.Services;
+using DGC.Sample.Application.Services.Queue.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DGC.Sample.Functions.Extensions;

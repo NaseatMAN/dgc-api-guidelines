@@ -1,4 +1,4 @@
-namespace DGC.Sample.Application.Queue;
+namespace DGC.Sample.Application.Interfaces.Queue;
 
 public interface IMessageHandler<T>
 {
