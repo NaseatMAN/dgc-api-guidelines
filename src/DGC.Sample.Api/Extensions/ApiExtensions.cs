@@ -1,8 +1,8 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
+using DGC.Sample.Domain.Exceptions.Errors;
 using DGC.Sample.Api.Middlewares;
 using DGC.Sample.Domain.Constants.ApiErrorConstants;
-using DGC.Sample.Domain.Exceptions.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Text.Json;
 using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Domain.Exceptions;
 
 namespace DGC.Sample.Api.Filters;
 
@@ -26,20 +27,15 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
             if (existingRequest.IsProcessing)
             {
                 // A request with this key is currently being processed
-                context.Result = new ConflictObjectResult(new
-                {
-                    error = new
-                    {
-                        code = "IdempotencyKeyProcessing",
-                        message = "A request with the same idempotency key is currently being processed."
-                    }
-                });
-                return;
+                throw new ConflictException(
+                    code: ConflictErrorCode.IdempotencyKeyProcessing,
+                    message: "A request with the same idempotency key is currently being processed.",
+                    azureErrorDetails: null);
             }
 
             context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
             context.HttpContext.Response.Headers["Repeatability-Result"] = "accepted"; // Consistent with Azure LRO/Repeatability patterns
-            
+
             var result = new ContentResult
             {
                 Content = existingRequest.ResponseBody,
@@ -68,15 +64,10 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
                 return;
             }
 
-            context.Result = new ConflictObjectResult(new
-            {
-                error = new
-                {
-                    code = "IdempotencyKeyProcessing",
-                    message = "A request with the same idempotency key is currently being processed."
-                }
-            });
-            return;
+            throw new ConflictException(
+                code: ConflictErrorCode.IdempotencyKeyProcessing,
+                message: "A request with the same idempotency key is currently being processed.",
+                azureErrorDetails: null);
         }
 
         var executedContext = await next();
@@ -89,7 +80,7 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
                 objectResult.StatusCode.Value,
                 responseBody,
                 context.HttpContext.RequestAborted);
-            
+
             context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
         }
     }
