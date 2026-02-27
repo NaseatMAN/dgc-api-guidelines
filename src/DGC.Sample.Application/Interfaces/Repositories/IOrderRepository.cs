@@ -1,15 +1,9 @@
-using DGC.Sample.Application.Dtos;
-using DGC.Sample.Domain.Enums;
+using DGC.Sample.Domain.Entities;
 
 namespace DGC.Sample.Application.Interfaces.Repositories;
 
-public interface IOrderRepository
+public interface IOrderRepository : IRepository<Order>
 {
-    Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken);
-    Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken);
-    Task<IReadOnlyList<OrderResponse>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken);
-    Task<OrderResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<OrderResponse> CreateAsync(OrderCreateRequest request, CancellationToken cancellationToken);
-    Task<(OrderResponse Response, bool Created)> UpsertAsync(Guid id, OrderUpdateRequest request, CancellationToken cancellationToken);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+    Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<Order?> GetWithItemsByIdAsync(Guid id, CancellationToken cancellationToken);
 }

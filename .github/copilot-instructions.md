@@ -30,7 +30,7 @@
 
 ## Data and validation conventions
 - EF Core (Npgsql) mappings are explicit in `src/DGC.Sample.Infrastructure/Persistence/Data/AppDbContext.cs` (snake_case table names, precision/length constraints).
-- Request validation uses FluentValidation auto-validation + custom model-state response mapping to `AzureErrorResponse` (`AddApiControllersWithAzureValidation`).
+- Request validation uses custom `ValidationAttribute` rules + custom model-state response mapping to `AzureErrorResponse` (`AddApiControllersWithAzureValidation`).
 - Do not return raw validation/model-state errors directly; keep Azure error envelope behavior.
 
 ## Local development workflow

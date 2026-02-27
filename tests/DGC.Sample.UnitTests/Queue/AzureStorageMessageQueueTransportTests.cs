@@ -1,6 +1,7 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using DGC.Sample.Api.Extensions;
+using DGC.Sample.Domain.Exceptions;
 using DGC.Sample.Infrastructure.Queue;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -60,7 +61,8 @@ public sealed class AzureStorageMessageQueueTransportTests
 
         var act = () => services.AddQueueInfrastructure(configuration);
 
-        act.Should().Throw<TransportInitializationException>();
+        var exception = act.Should().Throw<InternalErrorException>().Which;
+        exception.ResponseBody.Error.Code.Should().Be(InternalErrorCode.QueueTransportInitializationError);
     }
 
     private static IConfiguration BuildConfiguration(IReadOnlyDictionary<string, string?> data)

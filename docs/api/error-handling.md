@@ -58,7 +58,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
 
 ## 3. Validation Errors
 
-When validation fails (e.g., via `FluentValidation` or `DataAnnotations`), return a `400 Bad Request` with an `errors` collection in the extension.
+When validation fails (via request model validation attributes), return a `400 Bad Request` with an `errors` collection in the extension.
 
 ```json
 {

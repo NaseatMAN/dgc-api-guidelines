@@ -1,57 +1,54 @@
-# Input Validation with FluentValidation
+# Input Validation with Custom Validation Attributes
 
-We use **FluentValidation** for centralizing input validation logic. This replaces standard `DataAnnotations` to provide more powerful, readable, and maintainable validation rules.
+We use custom `ValidationAttribute` implementations (overriding `IsValid`) for request DTO validation.
 
 ## Implementation Overview
 
-1. **Validators**: Defined in `DGC.Sample.Application/Validators/`.
-2. **DTOs**: Cleaned of `DataAnnotation` attributes.
-3. **Automatic Validation**: Integrated into the ASP.NET Core pipeline using `FluentValidation.AspNetCore`.
-4. **Error Responses**: Validation failures are automatically captured and mapped to the **Azure REST API Error Format** via `ApiBehaviorOptions.InvalidModelStateResponseFactory`.
+1. **Custom Attributes**: Defined in `DGC.Sample.Application/Common/Validation/`.
+2. **DTOs**: Request DTOs are decorated with validation attributes.
+3. **Automatic Validation**: Executed by ASP.NET Core model validation for `[ApiController]` endpoints.
+4. **Error Responses**: Validation failures are mapped to the Azure REST API error envelope via `ApiBehaviorOptions.InvalidModelStateResponseFactory`.
 
-## Creating a Validator
-
-To create a new validator, inherit from `AbstractValidator<T>` where `T` is your DTO:
+## Creating a Custom Validation Attribute
 
 ```csharp
-using FluentValidation;
-using DGC.Sample.Application.Dtos;
+using System.ComponentModel.DataAnnotations;
 
-namespace DGC.Sample.Application.Validators;
+namespace DGC.Sample.Application.Common.Validation;
 
-public sealed class OrderCreateRequestValidator : AbstractValidator<OrderCreateRequest>
+public sealed class NonDefaultDateTimeAttribute : ValidationAttribute
 {
-    public OrderCreateRequestValidator()
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        RuleFor(x => x.CustomerName)
-            .NotEmpty()
-            .Length(2, 200);
+        if (value is DateTime dateTime && dateTime != default)
+        {
+            return ValidationResult.Success;
+        }
 
-        RuleFor(x => x.OrderDateUtc)
-            .NotEmpty();
-
-        RuleFor(x => x.Status)
-            .IsInEnum();
-
-        RuleFor(x => x.TotalAmount)
-            .GreaterThan(0)
-            .LessThanOrEqualTo(1_000_000);
+        return new ValidationResult(ErrorMessage ?? $"{validationContext.DisplayName} is required.");
     }
 }
 ```
 
-## Registration
-
-Validators are registered in `ServiceCollectionExtensions.cs` using:
+## Applying Attributes to DTOs
 
 ```csharp
-services.AddValidatorsFromAssemblyContaining<IOrderService>();
-services.AddFluentValidationAutoValidation();
+public sealed class OrderCreateRequest
+{
+    [NotWhiteSpace]
+    [StringLengthRange(2, 200)]
+    public string CustomerName { get; init; } = string.Empty;
+
+    [NonDefaultDateTime]
+    public DateTime OrderDateUtc { get; init; }
+}
 ```
+
+For positional records, apply attributes with the `property:` target.
 
 ## Error Response Format
 
-When a validation fails, the API returns a `400 Bad Request` with the following structure:
+When validation fails, the API returns a `400 Bad Request` in the Azure-style envelope:
 
 ```json
 {
@@ -61,7 +58,7 @@ When a validation fails, the API returns a `400 Bad Request` with the following 
     "details": [
       {
         "code": "BadArgument.CustomerName",
-        "message": "'Customer Name' must not be empty.",
+        "message": "CustomerName is required.",
         "target": "CustomerName"
       }
     ],
@@ -72,4 +69,4 @@ When a validation fails, the API returns a `400 Bad Request` with the following 
 }
 ```
 
-This ensures compliance with the **Microsoft Azure REST API Guidelines**.
+This keeps validation behavior aligned with the Microsoft Azure REST API Guidelines.

@@ -1,5 +1,7 @@
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
+using DGC.Sample.Domain.Exceptions;
 using DGC.Sample.Infrastructure.Queue;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -11,25 +13,27 @@ namespace DGC.Sample.UnitTests.Queue;
 public sealed class TransportResolverTests
 {
     [Fact]
-    public void Resolve_WhenTransportMissing_ShouldThrowTransportNotRegisteredException()
+    public void Resolve_WhenTransportMissing_ShouldThrowInternalErrorException()
     {
         var inMemoryTransport = new StubTransport<string>(QueueTransport.InMemory);
         var resolver = new TransportResolver<string>(new[] { inMemoryTransport });
 
         var act = () => resolver.Resolve(QueueTransport.Redis);
 
-        act.Should().Throw<TransportNotRegisteredException>();
+        var exception = act.Should().Throw<InternalErrorException>().Which;
+        exception.ResponseBody.Error.Code.Should().Be(InternalErrorCode.QueueTransportNotRegistered);
     }
 
     [Fact]
-    public void Ctor_WhenDuplicateTransportsRegistered_ShouldThrowTransportInitializationException()
+    public void Ctor_WhenDuplicateTransportsRegistered_ShouldThrowInternalErrorException()
     {
         var one = new StubTransport<string>(QueueTransport.InMemory);
         var two = new StubTransport<string>(QueueTransport.InMemory);
 
         var act = () => new TransportResolver<string>(new IMessageQueueTransport<string>[] { one, two });
 
-        act.Should().Throw<TransportInitializationException>();
+        var exception = act.Should().Throw<InternalErrorException>().Which;
+        exception.ResponseBody.Error.Code.Should().Be(InternalErrorCode.QueueTransportInitializationError);
     }
 
     private sealed class StubTransport<T>(QueueTransport transportType) : IMessageQueueTransport<T>

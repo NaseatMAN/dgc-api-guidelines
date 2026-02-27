@@ -12,16 +12,15 @@ namespace DGC.Sample.UnitTests.Services;
 
 public sealed class OrderServiceTests
 {
-    private readonly IRepository<Order> _orderRepository;
+    private readonly IOrderRepository _orderRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly OrderService _orderService;
 
     public OrderServiceTests()
     {
-        _orderRepository = Substitute.For<IRepository<Order>>();
+        _orderRepository = Substitute.For<IOrderRepository>();
         _unitOfWork = Substitute.For<IUnitOfWork>();
-        _unitOfWork.GetEntityRepository<Order>().Returns(_orderRepository);
-        _orderService = new OrderService(_unitOfWork);
+        _orderService = new OrderService(_orderRepository, _unitOfWork);
     }
 
     [Fact]
@@ -45,7 +44,7 @@ public sealed class OrderServiceTests
             TotalAmount = 200 
         };
 
-        _orderRepository.FindFirstAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Order, bool>>>(), Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(id, Arg.Any<CancellationToken>())
             .Returns(existingOrder);
 
         // Act
@@ -72,7 +71,7 @@ public sealed class OrderServiceTests
             TotalAmount = 200 
         };
 
-        _orderRepository.FindFirstAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Order, bool>>>(), Arg.Any<CancellationToken>())
+        _orderRepository.GetByIdAsync(id, Arg.Any<CancellationToken>())
             .Returns((Order?)null);
 
         // Act

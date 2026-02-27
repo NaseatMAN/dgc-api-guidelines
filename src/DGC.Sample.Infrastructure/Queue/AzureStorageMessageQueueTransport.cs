@@ -1,8 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using Azure.Storage.Queues;
-using DGC.Sample.Application.Queue;
-using DGC.Sample.Application.Queue.Exceptions;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
+using DGC.Sample.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -29,8 +31,10 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
 
         if (string.IsNullOrWhiteSpace(storageConnection))
         {
-            throw new TransportInitializationException(
-                "Azure queue transport requires 'AzureWebJobsStorage' configuration.");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Azure queue transport requires 'AzureWebJobsStorage' configuration.",
+                azureErrorDetails: null);
         }
 
         var queueName = configuration["Queue:Azure:QueueName"]
@@ -38,8 +42,10 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
 
         if (string.IsNullOrWhiteSpace(queueName))
         {
-            throw new TransportInitializationException(
-                "Azure queue transport requires queue name configuration at 'Queue:Azure:QueueName' or 'AzureFunctions:QueueName'.");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Azure queue transport requires queue name configuration at 'Queue:Azure:QueueName' or 'AzureFunctions:QueueName'.",
+                azureErrorDetails: null);
         }
 
         _storageConnection = storageConnection;
@@ -73,9 +79,11 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
 
         if (payloadSize > _maxPayloadBytes)
         {
-            throw new QueueProcessingException(
+            throw new InternalErrorException(
+                InternalErrorCode.QueueProcessingError,
                 $"Queue payload exceeds max allowed bytes ({_maxPayloadBytes}).",
-                new InvalidOperationException("Payload too large"));
+                innerCode: "payload_too_large",
+                innerMessage: "Queue payload size is larger than configured maximum.");
         }
 
         await queueClient.CreateIfNotExistsAsync(cancellationToken: token).ConfigureAwait(false);
@@ -140,22 +148,34 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
     {
         if (queueName.Length is < 3 or > 63)
         {
-            throw new TransportInitializationException("Azure queue name must be between 3 and 63 characters.");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Azure queue name must be between 3 and 63 characters.",
+                azureErrorDetails: null);
         }
 
         if (!char.IsLetterOrDigit(queueName[0]) || !char.IsLetterOrDigit(queueName[^1]))
         {
-            throw new TransportInitializationException("Azure queue name must start and end with a lowercase letter or number.");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Azure queue name must start and end with a lowercase letter or number.",
+                azureErrorDetails: null);
         }
 
         if (queueName.Any(c => !(char.IsLower(c) || char.IsDigit(c) || c == '-')))
         {
-            throw new TransportInitializationException("Azure queue name can contain only lowercase letters, digits, and '-'.");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Azure queue name can contain only lowercase letters, digits, and '-'.",
+                azureErrorDetails: null);
         }
 
         if (queueName.Contains("--", StringComparison.Ordinal))
         {
-            throw new TransportInitializationException("Azure queue name cannot contain consecutive hyphens.");
+            throw new InternalErrorException(
+                InternalErrorCode.QueueTransportInitializationError,
+                "Azure queue name cannot contain consecutive hyphens.",
+                azureErrorDetails: null);
         }
     }
 }

@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
-using DGC.Sample.Application.Queue;
+using DGC.Sample.Application.Common.Queue;
+using DGC.Sample.Application.Dtos.Queue;
+using DGC.Sample.Application.Interfaces.Queue;
 using Microsoft.Extensions.Logging;
 
 namespace DGC.Sample.Infrastructure.Queue;
