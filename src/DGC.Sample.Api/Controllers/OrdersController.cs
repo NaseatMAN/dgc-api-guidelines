@@ -2,7 +2,7 @@ using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
-using DGC.Sample.Application.Interfaces.Repositories;
+using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Application.Queue;
 using DGC.Sample.Application.Queue.Messages;
 using DGC.Sample.Domain.Enums;
@@ -15,10 +15,10 @@ namespace DGC.Sample.Api.Controllers;
 [Route("orders")]
 public sealed class OrdersController : ControllerBase
 {
-    private readonly IOrderRepository _orderService;
+    private readonly IOrderService _orderService;
     private readonly IQueueService _queueService;
 
-    public OrdersController(IOrderRepository orderService, IQueueService queueService)
+    public OrdersController(IOrderService orderService, IQueueService queueService)
     {
         _orderService = orderService;
         _queueService = queueService;

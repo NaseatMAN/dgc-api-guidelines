@@ -2,7 +2,7 @@ using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
 using DGC.Sample.Application.Interfaces;
-using DGC.Sample.Application.Interfaces.Repositories;
+using DGC.Sample.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DGC.Sample.Api.Controllers;
@@ -10,9 +10,9 @@ namespace DGC.Sample.Api.Controllers;
 [ApiController]
 [ApiVersion("2026-02-05")]
 [Route("users")]
-public sealed class UsersController(DGC.Sample.Application.Interfaces.Repositories.IUserRepository userService) : ControllerBase
+public sealed class UsersController(IUserService userService) : ControllerBase
 {
-    private readonly DGC.Sample.Application.Interfaces.Repositories.IUserRepository _userService = userService;
+    private readonly IUserService _userService = userService;
 
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<UserResponse>), StatusCodes.Status200OK)]

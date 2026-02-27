@@ -4,7 +4,7 @@ using DGC.Sample.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace DGC.Sample.Infrastructure.Persistence.Repositories.UserMgmt;
-public sealed class UserRepository(AppDbContext dbContext) : Repository<User>(dbContext), IRepository<User>
+public sealed class UserRepository(AppDbContext dbContext) : Repository<User>(dbContext), IUserRepository
 {
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken)
     {
