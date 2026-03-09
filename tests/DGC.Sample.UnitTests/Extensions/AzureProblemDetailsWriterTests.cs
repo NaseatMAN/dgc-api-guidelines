@@ -39,7 +39,7 @@ public sealed class AzureProblemDetailsWriterTests
 
         // Assert
         var exception = await act.Should().ThrowAsync<BadRequestException>();
-        exception.Which.ResponseBody.Error.Code.Should().Be(VersioningErrorCode.MissingApiVersionParameter);
+        exception.Which.ResponseBody.Error.Code.Should().Be(BadRequestErrorCode.MissingApiVersionParameter);
         exception.Which.Message.Should().Be("The api-version query parameter (?api-version=) is required for all requests");
     }
 
@@ -69,7 +69,7 @@ public sealed class AzureProblemDetailsWriterTests
 
         // Assert
         var exception = await act.Should().ThrowAsync<BadRequestException>();
-        exception.Which.ResponseBody.Error.Code.Should().Be(VersioningErrorCode.UnsupportedApiVersionValue);
+        exception.Which.ResponseBody.Error.Code.Should().Be(BadRequestErrorCode.UnsupportedApiVersionValue);
         exception.Which.Message.Should().Be("Unsupported api-version '1.0'.");
     }
 

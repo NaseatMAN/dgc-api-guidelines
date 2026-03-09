@@ -34,10 +34,10 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
                 var typeFragment = problem.Type.Split('#').LastOrDefault();
                 errorCode = typeFragment switch
                 {
-                    "unspecified" => VersioningErrorCode.MissingApiVersionParameter,
-                    "apiVersionUnspecified" => VersioningErrorCode.MissingApiVersionParameter,
-                    "unsupported" => VersioningErrorCode.UnsupportedApiVersionValue,
-                    "unsupportedApiVersion" => VersioningErrorCode.UnsupportedApiVersionValue,
+                    "unspecified" => BadRequestErrorCode.MissingApiVersionParameter,
+                    "apiVersionUnspecified" => BadRequestErrorCode.MissingApiVersionParameter,
+                    "unsupported" => BadRequestErrorCode.UnsupportedApiVersionValue,
+                    "unsupportedApiVersion" => BadRequestErrorCode.UnsupportedApiVersionValue,
                     _ => typeFragment
                 };
                 isVersioningError = true;
@@ -47,7 +47,7 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
                 errorCode = problem.Status?.ToString() ?? "InternalServerError";
             }
         }
-        else if (errorCode == VersioningErrorCode.MissingApiVersionParameter || errorCode == VersioningErrorCode.UnsupportedApiVersionValue)
+        else if (errorCode == BadRequestErrorCode.MissingApiVersionParameter || errorCode == BadRequestErrorCode.UnsupportedApiVersionValue)
         {
             isVersioningError = true;
         }
@@ -57,11 +57,11 @@ public sealed class AzureProblemDetailsWriter : IProblemDetailsWriter
         // Override messages for versioning errors to match Azure Guidelines exactly
         if (isVersioningError)
         {
-            if (errorCode == VersioningErrorCode.MissingApiVersionParameter)
+            if (errorCode == BadRequestErrorCode.MissingApiVersionParameter)
             {
                 message = "The api-version query parameter (?api-version=) is required for all requests";
             }
-            else if (errorCode == VersioningErrorCode.UnsupportedApiVersionValue)
+            else if (errorCode == BadRequestErrorCode.UnsupportedApiVersionValue)
             {
                 // For unsupported version, try to get the requested version if available
                 var requestedVersion = problem.Extensions.TryGetValue("apiVersion", out var v) ? v?.ToString() : null;
