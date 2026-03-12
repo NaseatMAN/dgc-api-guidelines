@@ -301,9 +301,9 @@ Create response:
 }
 ```
 
-## 13. Standard error response (RFC 7807)
+## 13. Standard error response (Azure API Guideline)
 
-Use Problem Details for all error responses to provide a machine-readable format for errors.
+All error responses return a standard Azure error response format.
 
 See the [Standard Error Handling Guide](./error-handling.md) for detailed requirements and .NET implementation examples.
 
@@ -491,7 +491,7 @@ Before publishing an API:
 - Resource model reviewed and approved.
 - Versioning and deprecation plan documented.
 - Authentication and authorization tested with least privilege.
-- RFC 7807 error model implemented and validated.
+- Azure API Guideline error responses implemented and validated.
 - Correlation ID and tracing confirmed end-to-end.
 - Health checks and dependency monitoring enabled.
 - APIM policies applied (JWT validation, throttling, headers).
@@ -501,4 +501,4 @@ Before publishing an API:
 
 - Microsoft REST API Guidelines
 - Azure Well-Architected Framework
-- RFC 7807: Problem Details for HTTP APIs
+- Azure API Guideline: Error Responses
