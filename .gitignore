@@ -411,3 +411,4 @@ _bmad/*
 coverage-report/*
 coverage-report-new/*
 .env
+*.dotnet
