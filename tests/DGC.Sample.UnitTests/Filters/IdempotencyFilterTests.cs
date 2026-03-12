@@ -49,10 +49,10 @@ public sealed class IdempotencyFilterTests
         // Arrange
         var key = "test-key";
         var context = CreateActionExecutingContext(key);
-        var cachedResponse = new IdempotencyResult(201, "{\"id\": 1}");
+        var cachedResponse = new IdempotencyResult(201, "{\"id\": 1}", "hash-1");
 
-        _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
-            .Returns(cachedResponse);
+        _idempotencyService.TryStartRequestAsync(key, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new IdempotencyExecutionResult(IdempotencyExecutionState.Completed, cachedResponse));
 
         ActionExecutionDelegate next = () => throw new Exception("Should not be called");
 
@@ -80,11 +80,8 @@ public sealed class IdempotencyFilterTests
             Result = new OkObjectResult(responseValue)
         };
 
-        _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
-            .Returns((IdempotencyResult?)null);
-
-        _idempotencyService.TryStartRequestAsync(key, Arg.Any<CancellationToken>())
-            .Returns(true);
+        _idempotencyService.TryStartRequestAsync(key, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new IdempotencyExecutionResult(IdempotencyExecutionState.Started));
 
         ActionExecutionDelegate next = () => Task.FromResult(actionExecutedContext);
 
@@ -94,8 +91,10 @@ public sealed class IdempotencyFilterTests
         // Assert
         await _idempotencyService.Received(1).SaveRequestAsync(
             key,
+            Arg.Any<string>(),
             200,
             Arg.Is<string>(s => s.Contains("\"id\":1")),
+            "application/json",
             Arg.Any<CancellationToken>());
 
         context.HttpContext.Response.Headers["Idempotency-Key"].ToString().Should().Be(key);
@@ -107,10 +106,10 @@ public sealed class IdempotencyFilterTests
         // Arrange
         var key = "processing-key";
         var context = CreateActionExecutingContext(key);
-        var cachedResponse = new IdempotencyResult(201, "{}", IsProcessing: true);
+        var cachedResponse = new IdempotencyResult(201, "{}", "hash-1", IsProcessing: true);
 
-        _idempotencyService.GetRequestAsync(key, Arg.Any<CancellationToken>())
-            .Returns(cachedResponse);
+        _idempotencyService.TryStartRequestAsync(key, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new IdempotencyExecutionResult(IdempotencyExecutionState.Processing, cachedResponse));
 
         ActionExecutionDelegate next = () => throw new Exception("Should not be called");
 
@@ -120,6 +119,41 @@ public sealed class IdempotencyFilterTests
         // Assert
         var exception = await act.Should().ThrowAsync<ConflictException>();
         exception.Which.ResponseBody.Error.Code.Should().Be(ConflictErrorCode.IdempotencyKeyProcessing);
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_WhenKeyReusedForDifferentPayload_ShouldThrowConflictException()
+    {
+        var key = "mismatch-key";
+        var context = CreateActionExecutingContext(key);
+
+        _idempotencyService.TryStartRequestAsync(key, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new IdempotencyExecutionResult(IdempotencyExecutionState.RequestMismatch));
+
+        ActionExecutionDelegate next = () => throw new Exception("Should not be called");
+
+        var act = async () => await _filter.OnActionExecutionAsync(context, next);
+
+        var exception = await act.Should().ThrowAsync<ConflictException>();
+        exception.Which.ResponseBody.Error.Code.Should().Be(ConflictErrorCode.IdempotencyKeyReuseMismatch);
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_WhenActionThrows_ShouldReleaseRequest()
+    {
+        var key = "throwing-key";
+        var context = CreateActionExecutingContext(key);
+
+        _idempotencyService.TryStartRequestAsync(key, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new IdempotencyExecutionResult(IdempotencyExecutionState.Started));
+
+        ActionExecutionDelegate next = () => throw new InvalidOperationException("boom");
+
+        var act = async () => await _filter.OnActionExecutionAsync(context, next);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        await _idempotencyService.Received(1)
+            .ReleaseRequestAsync(key, Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     private static ActionExecutingContext CreateActionExecutingContext(string? idempotencyKey = null)

@@ -13,6 +13,7 @@ builder.Services.AddApiQueueWorkers(builder.Configuration);
 builder.Services.AddCustomApiVersioning();
 
 var app = builder.Build();
+await app.ApplyDatabaseMigrationsAsync();
 app.UseApiMiddlewares();
 app.UseSwaggerConfiguration();
 app.UseHttpsRedirection();

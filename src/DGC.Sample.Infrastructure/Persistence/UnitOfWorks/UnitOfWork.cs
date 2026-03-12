@@ -1,4 +1,3 @@
-using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Infrastructure.Persistence.Data;
@@ -6,19 +5,11 @@ using DGC.Sample.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DGC.Sample.Infrastructure.UnitOfWorks
+namespace DGC.Sample.Infrastructure.Persistence.UnitOfWorks
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork(AppDbContext dbContext, IServiceProvider serviceProvider) : IUnitOfWork
     {
-        private readonly AppDbContext context;
-        private readonly IServiceProvider serviceProvider;
-        private bool disposed = false;
-
-        public UnitOfWork(AppDbContext dbContext, IServiceProvider serviceProvider)
-        {
-            this.context = dbContext;
-            this.serviceProvider = serviceProvider;
-        }
+        private bool _disposed;
 
         public TRepository GetRepository<TRepository>()
             where TRepository : class
@@ -31,14 +22,14 @@ namespace DGC.Sample.Infrastructure.UnitOfWorks
 
         public IRepository<TEntity> GetEntityRepository<TEntity>() where TEntity : class
         {
-            return new Repository<TEntity>(context);
+            return new Repository<TEntity>(dbContext);
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                return await context.SaveChangesAsync(cancellationToken);
+                return await dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex)
             {
@@ -48,7 +39,7 @@ namespace DGC.Sample.Infrastructure.UnitOfWorks
 
         public void DiscardChanges()
         {
-            foreach (var entry in context.ChangeTracker.Entries())
+            foreach (var entry in dbContext.ChangeTracker.Entries())
             {
                 switch (entry.State)
                 {
@@ -67,16 +58,16 @@ namespace DGC.Sample.Infrastructure.UnitOfWorks
 
         public bool HasUnsavedChanges()
         {
-            return context.ChangeTracker.HasChanges();
+            return dbContext.ChangeTracker.HasChanges();
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposed && disposing)
+            if (!_disposed && disposing)
             {
-                context.Dispose();
+                dbContext.Dispose();
             }
-            disposed = true;
+            _disposed = true;
         }
 
         public void Dispose()

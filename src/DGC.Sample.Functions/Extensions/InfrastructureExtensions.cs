@@ -1,15 +1,13 @@
-using DGC.Sample.Application.Interfaces;
 using DGC.Sample.Application.Interfaces.Notifications;
 using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Infrastructure.Caching;
 using DGC.Sample.Infrastructure.ExternalServices.Notifications;
-using DGC.Sample.Infrastructure.Identity;
 using DGC.Sample.Infrastructure.Persistence.Data;
 using DGC.Sample.Infrastructure.Persistence.Interceptors;
 using DGC.Sample.Infrastructure.Persistence.Repositories.Purchases;
 using DGC.Sample.Infrastructure.Persistence.Repositories.UserMgmt;
-using DGC.Sample.Infrastructure.UnitOfWorks;
+using DGC.Sample.Infrastructure.Persistence.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,9 +26,6 @@ public static class InfrastructureExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(defaultConnection)
                 .AddInterceptors(new SoftDeleteInterceptor(), new AuditInterceptor()));
-
-        services.AddHttpContextAccessor();
-        services.AddScoped<ITenantAccessor, HttpTenantAccessor>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderRepository, OrderRepository>();

@@ -3,7 +3,6 @@ using DGC.Sample.Application.Interfaces.Persistence;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Application.Mappings;
-using DGC.Sample.Domain.Entities;
 using DGC.Sample.Domain.Enums;
 using DGC.Sample.Domain.Specifications.Orders;
 
@@ -14,12 +13,12 @@ public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork u
     private readonly IOrderRepository _orderRepository = orderRepository;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-    public async Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var orders = _orderRepository.QueryAsNoTracking()
             .OrderBy(order => order.OrderDateUtc)
             .ToList();
-        return [.. orders.Select(OrderMapper.ToResponse)];
+        return Task.FromResult<IReadOnlyList<OrderResponse>>([.. orders.Select(OrderMapper.ToResponse)]);
     }
 
     public async Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken)

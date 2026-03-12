@@ -1,7 +1,11 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.Text.Json;
+using System.Text;
 using DGC.Sample.Application.Interfaces.Persistence;
+using DGC.Sample.Application.Dtos;
 using DGC.Sample.Domain.Exceptions;
 
 namespace DGC.Sample.Api.Filters;
@@ -20,68 +24,133 @@ public sealed class IdempotencyFilter(IIdempotencyService idempotencyService) : 
         }
 
         var key = idempotencyKey.ToString();
-        var existingRequest = await _idempotencyService.GetRequestAsync(key, context.HttpContext.RequestAborted);
+        var requestHash = ComputeRequestHash(context);
+        var execution = await _idempotencyService.TryStartRequestAsync(key, requestHash, context.HttpContext.RequestAborted);
 
-        if (existingRequest != null)
+        switch (execution.State)
         {
-            if (existingRequest.IsProcessing)
-            {
-                // A request with this key is currently being processed
+            case IdempotencyExecutionState.Completed:
+                WriteReplayHeaders(context.HttpContext.Response, key);
+                context.Result = new ContentResult
+                {
+                    Content = execution.CachedResponse!.ResponseBody,
+                    ContentType = execution.CachedResponse.ContentType,
+                    StatusCode = execution.CachedResponse.StatusCode
+                };
+                return;
+            case IdempotencyExecutionState.Processing:
                 throw new ConflictException(
                     code: ConflictErrorCode.IdempotencyKeyProcessing,
                     message: "A request with the same idempotency key is currently being processed.",
                     azureErrorDetails: null);
-            }
-
-            context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
-            context.HttpContext.Response.Headers["Repeatability-Result"] = "accepted"; // Consistent with Azure LRO/Repeatability patterns
-
-            var result = new ContentResult
-            {
-                Content = existingRequest.ResponseBody,
-                ContentType = "application/json",
-                StatusCode = existingRequest.StatusCode
-            };
-            context.Result = result;
-            return;
+            case IdempotencyExecutionState.RequestMismatch:
+                throw new ConflictException(
+                    code: ConflictErrorCode.IdempotencyKeyReuseMismatch,
+                    message: "The same idempotency key cannot be reused with a different request payload.",
+                    azureErrorDetails: null);
         }
 
-        // Try to atomically reserve the key
-        if (!await _idempotencyService.TryStartRequestAsync(key, context.HttpContext.RequestAborted))
+        try
         {
-            // Re-check in case it finished between Get and TryStart
-            var finalCheck = await _idempotencyService.GetRequestAsync(key, context.HttpContext.RequestAborted);
-            if (finalCheck != null && !finalCheck.IsProcessing)
+            var executedContext = await next();
+            var cachedResponse = TryBuildCacheEntry(executedContext.Result);
+            if (cachedResponse is not null)
             {
+                await _idempotencyService.SaveRequestAsync(
+                    key,
+                    requestHash,
+                    cachedResponse.Value.StatusCode,
+                    cachedResponse.Value.ResponseBody,
+                    cachedResponse.Value.ContentType,
+                    context.HttpContext.RequestAborted);
+
                 context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
-                context.HttpContext.Response.Headers["Repeatability-Result"] = "accepted";
-                context.Result = new ContentResult
-                {
-                    Content = finalCheck.ResponseBody,
-                    ContentType = "application/json",
-                    StatusCode = finalCheck.StatusCode
-                };
-                return;
             }
-
-            throw new ConflictException(
-                code: ConflictErrorCode.IdempotencyKeyProcessing,
-                message: "A request with the same idempotency key is currently being processed.",
-                azureErrorDetails: null);
         }
-
-        var executedContext = await next();
-
-        if (executedContext.Result is ObjectResult objectResult && objectResult.StatusCode is >= 200 and < 300)
+        catch
         {
-            var responseBody = JsonSerializer.Serialize(objectResult.Value);
-            await _idempotencyService.SaveRequestAsync(
-                key,
-                objectResult.StatusCode.Value,
-                responseBody,
-                context.HttpContext.RequestAborted);
-
-            context.HttpContext.Response.Headers[IdempotencyKeyHeader] = key;
+            await _idempotencyService.ReleaseRequestAsync(key, requestHash, context.HttpContext.RequestAborted);
+            throw;
         }
     }
+
+    private static void WriteReplayHeaders(HttpResponse response, string key)
+    {
+        response.Headers[IdempotencyKeyHeader] = key;
+        response.Headers["Repeatability-Result"] = "accepted";
+    }
+
+    private static string ComputeRequestHash(ActionExecutingContext context)
+    {
+        var payload = new SortedDictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var argument in context.ActionArguments)
+        {
+            if (!ShouldIncludeInHash(argument.Value))
+            {
+                continue;
+            }
+
+            payload[argument.Key] = argument.Value;
+        }
+
+        var canonicalRequest = JsonSerializer.Serialize(new
+        {
+            method = context.HttpContext.Request.Method,
+            path = context.HttpContext.Request.Path.Value,
+            query = context.HttpContext.Request.QueryString.Value,
+            arguments = payload
+        });
+
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(canonicalRequest)));
+    }
+
+    private static bool ShouldIncludeInHash(object? argumentValue)
+    {
+        if (argumentValue is null)
+        {
+            return true;
+        }
+
+        return argumentValue switch
+        {
+            CancellationToken => false,
+            HttpContext => false,
+            HttpRequest => false,
+            HttpResponse => false,
+            ClaimsPrincipal => false,
+            Stream => false,
+            _ => true
+        };
+    }
+
+    private static (int StatusCode, string ResponseBody, string ContentType)? TryBuildCacheEntry(IActionResult? result)
+    {
+        switch (result)
+        {
+            case ObjectResult objectResult when IsSuccessful(objectResult.StatusCode):
+                return (
+                    objectResult.StatusCode!.Value,
+                    JsonSerializer.Serialize(objectResult.Value),
+                    "application/json");
+            case JsonResult jsonResult when IsSuccessful(jsonResult.StatusCode):
+                return (
+                    jsonResult.StatusCode!.Value,
+                    JsonSerializer.Serialize(jsonResult.Value),
+                    jsonResult.ContentType ?? "application/json");
+            case ContentResult contentResult when IsSuccessful(contentResult.StatusCode):
+                return (
+                    contentResult.StatusCode!.Value,
+                    contentResult.Content ?? string.Empty,
+                    contentResult.ContentType ?? "text/plain");
+            case IStatusCodeActionResult statusCodeResult when IsSuccessful(statusCodeResult.StatusCode):
+                return (
+                    statusCodeResult.StatusCode!.Value,
+                    string.Empty,
+                    "text/plain");
+            default:
+                return null;
+        }
+    }
+
+    private static bool IsSuccessful(int? statusCode) => statusCode is >= 200 and < 300;
 }

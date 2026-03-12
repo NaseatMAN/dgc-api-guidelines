@@ -1,3 +1,4 @@
+using DGC.Sample.Application.Dtos;
 using DGC.Sample.Infrastructure.Caching;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -9,36 +10,66 @@ namespace DGC.Sample.UnitTests.Services;
 public sealed class HybridCacheIdempotencyServiceTests
 {
     [Fact]
-    public async Task GetRequestAsync_WhenKeyDoesNotExist_ShouldReturnNull()
+    public async Task TryStartRequestAsync_WhenKeyDoesNotExist_ShouldReserveKey()
     {
-        // Arrange
         var cache = CreateHybridCache();
         var service = new HybridCacheIdempotencyService(cache);
+        var idempotencyKey = Guid.NewGuid().ToString("N");
+        var requestHash = "hash-1";
 
-        // Act
-        var result = await service.GetRequestAsync(Guid.NewGuid().ToString("N"), CancellationToken.None);
+        var result = await service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None);
 
-        // Assert
-        result.Should().BeNull();
+        result.State.Should().Be(IdempotencyExecutionState.Started);
+        result.CachedResponse.Should().BeNull();
     }
 
     [Fact]
-    public async Task SaveRequestAsync_ThenGetRequestAsync_ShouldReturnSavedResponse()
+    public async Task SaveRequestAsync_ThenTryStartRequestAsync_ShouldReturnSavedResponse()
     {
-        // Arrange
+        var cache = CreateHybridCache();
+        var service = new HybridCacheIdempotencyService(cache);
+        var idempotencyKey = Guid.NewGuid().ToString("N");
+        var requestHash = "hash-1";
+
+        await service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None);
+        await service.SaveRequestAsync(idempotencyKey, requestHash, 201, "{\"id\":1}", "application/json", CancellationToken.None);
+        var result = await service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None);
+
+        result.State.Should().Be(IdempotencyExecutionState.Completed);
+        result.CachedResponse.Should().NotBeNull();
+        result.CachedResponse!.StatusCode.Should().Be(201);
+        result.CachedResponse.ResponseBody.Should().Be("{\"id\":1}");
+        result.CachedResponse.IsProcessing.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task TryStartRequestAsync_WhenSameKeyUsesDifferentHash_ShouldReturnMismatch()
+    {
         var cache = CreateHybridCache();
         var service = new HybridCacheIdempotencyService(cache);
         var idempotencyKey = Guid.NewGuid().ToString("N");
 
-        // Act
-        await service.SaveRequestAsync(idempotencyKey, 201, "{\"id\":1}", CancellationToken.None);
-        var result = await service.GetRequestAsync(idempotencyKey, CancellationToken.None);
+        await service.TryStartRequestAsync(idempotencyKey, "hash-1", CancellationToken.None);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.StatusCode.Should().Be(201);
-        result.ResponseBody.Should().Be("{\"id\":1}");
-        result.IsProcessing.Should().BeFalse();
+        var result = await service.TryStartRequestAsync(idempotencyKey, "hash-2", CancellationToken.None);
+
+        result.State.Should().Be(IdempotencyExecutionState.RequestMismatch);
+    }
+
+    [Fact]
+    public async Task ReleaseRequestAsync_ShouldAllowRetryAfterFailure()
+    {
+        var cache = CreateHybridCache();
+        var service = new HybridCacheIdempotencyService(cache);
+        var idempotencyKey = Guid.NewGuid().ToString("N");
+        const string requestHash = "hash-1";
+
+        await service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None);
+        await service.ReleaseRequestAsync(idempotencyKey, requestHash, CancellationToken.None);
+
+        var result = await service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None);
+
+        result.State.Should().Be(IdempotencyExecutionState.Started);
     }
 
     private static HybridCache CreateHybridCache()
