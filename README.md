@@ -222,6 +222,23 @@ Current keys moved to User Secrets:
 
 - `ConnectionStrings:DefaultConnection`
 - `ConnectionStrings:Redis`
+- `Notifications:Email:Enabled`
+- `Notifications:Email:Host`
+- `Notifications:Email:Port`
+- `Notifications:Email:UseSsl`
+- `Notifications:Email:FromAddress`
+- `Notifications:Email:FromDisplayName`
+- `Notifications:Email:Username`
+- `Notifications:Email:Password`
+- `Notifications:Telegram:Enabled`
+- `Notifications:Telegram:BotToken`
+- `Notifications:Telegram:BaseUrl`
+- `ExternalApis:JsonPlaceholder:BaseUrl`
+- `ExternalApis:JsonPlaceholder:TimeoutSeconds`
+- `Database:Resiliency:EnableRetryOnFailure`
+- `Database:Resiliency:MaxRetryCount`
+- `Database:Resiliency:MaxRetryDelaySeconds`
+- `Database:Resiliency:CommandTimeoutSeconds`
 - `AzureWebJobsStorage` (when API publishes to Azure queue)
 - `Queue:Azure:QueueName` (queue used by API Azure transport)
 
@@ -235,22 +252,45 @@ Set mock values from command line:
 cd src/DGC.Sample.Api
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
 dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379,abortConnect=false"
+dotnet user-secrets set "Notifications:Email:Enabled" "false"
+dotnet user-secrets set "Notifications:Email:Host" "smtp.example.com"
+dotnet user-secrets set "Notifications:Email:Port" "587"
+dotnet user-secrets set "Notifications:Email:UseSsl" "true"
+dotnet user-secrets set "Notifications:Email:FromAddress" "noreply@example.com"
+dotnet user-secrets set "Notifications:Email:FromDisplayName" "DGC Sample"
+dotnet user-secrets set "Notifications:Email:Username" "mock@example.com"
+dotnet user-secrets set "Notifications:Email:Password" "mock_email_password"
+dotnet user-secrets set "Notifications:Telegram:Enabled" "false"
+dotnet user-secrets set "Notifications:Telegram:BotToken" "mock_telegram_bot_token"
+dotnet user-secrets set "Notifications:Telegram:BaseUrl" "https://api.telegram.org/"
+dotnet user-secrets set "ExternalApis:JsonPlaceholder:BaseUrl" "https://jsonplaceholder.typicode.com/"
+dotnet user-secrets set "ExternalApis:JsonPlaceholder:TimeoutSeconds" "10"
+dotnet user-secrets set "Database:Resiliency:EnableRetryOnFailure" "true"
+dotnet user-secrets set "Database:Resiliency:MaxRetryCount" "5"
+dotnet user-secrets set "Database:Resiliency:MaxRetryDelaySeconds" "30"
+dotnet user-secrets set "Database:Resiliency:CommandTimeoutSeconds" "30"
 dotnet user-secrets set "AzureWebJobsStorage" "UseDevelopmentStorage=true"
 dotnet user-secrets set "Queue:Azure:QueueName" "orders"
 dotnet user-secrets list
 
 cd ..\DGC.Sample.Functions
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
+dotnet user-secrets set "Database:Resiliency:EnableRetryOnFailure" "true"
+dotnet user-secrets set "Database:Resiliency:MaxRetryCount" "5"
+dotnet user-secrets set "Database:Resiliency:MaxRetryDelaySeconds" "30"
+dotnet user-secrets set "Database:Resiliency:CommandTimeoutSeconds" "30"
 dotnet user-secrets set "AzureWebJobsStorage" "UseDevelopmentStorage=true"
 dotnet user-secrets set "AzureFunctions:QueueName" "orders"
 dotnet user-secrets list
 ```
 
 Notes:
+- `src/DGC.Sample.Api/appsettings.json` omits secret keys and the entire `Notifications` section; provide all notification settings via User Secrets or environment variables.
 - `AzureWebJobsStorage` is required by Azure Functions queue triggers and should remain secret-backed outside source control.
 - Use `UseDevelopmentStorage=true` as a local mock/default value (Azurite/local emulator scenario).
 - `AzureFunctions:QueueName` should be lowercase and compatible with Azure queue naming rules.
 - API Azure transport uses `Queue:Azure:QueueName` (falls back to `AzureFunctions:QueueName`).
+- Switch provider in code by using either `AddPostgresqlServer(...)` or `AddSqlServer(...)` in API `InfrastructureExtensions`.
 
 Run the Function host locally:
 
