@@ -7,7 +7,6 @@ using DGC.Sample.Infrastructure.Persistence.Data;
 using DGC.Sample.Infrastructure.Persistence.Repositories.Purchases;
 using DGC.Sample.Infrastructure.Persistence.Repositories.UserMgmt;
 using DGC.Sample.Infrastructure.Persistence.UnitOfWorks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,12 +17,8 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddFunctionInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var defaultConnection =
-            configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=dgc_sample;Username=postgres;Password=password";
-
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(defaultConnection));
+        services.AddPostgresqlServer(configuration);
+        // services.AddSqlServer(configuration);
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderRepository, OrderRepository>();
