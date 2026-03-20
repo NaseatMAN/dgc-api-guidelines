@@ -4,7 +4,6 @@ using DGC.Sample.Application.Interfaces.ExternalServices;
 using DGC.Sample.Infrastructure.Caching;
 using DGC.Sample.Infrastructure.ExternalServices.PublicApis;
 using DGC.Sample.Infrastructure.Persistence.Data;
-using DGC.Sample.Infrastructure.Persistence.Interceptors;
 using DGC.Sample.Infrastructure.Persistence.Repositories.Purchases;
 using DGC.Sample.Infrastructure.Persistence.Repositories.UserMgmt;
 using DGC.Sample.Infrastructure.Persistence.UnitOfWorks;
@@ -23,8 +22,7 @@ public static class InfrastructureExtensions
             configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(defaultConnection)
-                .AddInterceptors(new SoftDeleteInterceptor(), new AuditInterceptor()));
+            options.UseNpgsql(defaultConnection));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderRepository, OrderRepository>();
