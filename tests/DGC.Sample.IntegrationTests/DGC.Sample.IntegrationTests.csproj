@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="coverlet.collector" />
@@ -17,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DGC.Sample.Api\DGC.Sample.Api.csproj" />
     <ProjectReference Include="..\..\src\DGC.Sample.Application\DGC.Sample.Application.csproj" />
     <ProjectReference Include="..\..\src\DGC.Sample.Infrastructure\DGC.Sample.Infrastructure.csproj" />
   </ItemGroup>

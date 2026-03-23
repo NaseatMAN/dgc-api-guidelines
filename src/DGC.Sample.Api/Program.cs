@@ -13,7 +13,6 @@ builder.Services.AddApiQueueWorkers(builder.Configuration);
 builder.Services.AddCustomApiVersioning();
 
 var app = builder.Build();
-await app.ApplyDatabaseMigrationsAsync();
 app.UseApiMiddlewares();
 app.UseSwaggerConfiguration();
 app.UseHttpsRedirection();
@@ -21,3 +20,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program;

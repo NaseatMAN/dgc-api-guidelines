@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using DGC.Sample.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +25,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAtUtc).HasDefaultValueSql("'-infinity'::timestamp with time zone");
             entity.Property(e => e.CustomerName).HasMaxLength(200);
-            entity.Property(e => e.TenantId).HasDefaultValueSql("''::text");
             entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
         });
 
@@ -51,7 +48,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.FullName).HasMaxLength(200);
             entity.Property(e => e.NationalId).HasMaxLength(10);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-            entity.Property(e => e.TenantId).HasDefaultValueSql("''::text");
         });
 
         OnModelCreatingPartial(modelBuilder);

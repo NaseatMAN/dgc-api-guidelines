@@ -1,3 +1,5 @@
+
+
 using DGC.Sample.Domain.Entities;
 
 namespace DGC.Sample.Domain.Specifications.Users;

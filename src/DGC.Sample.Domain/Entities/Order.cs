@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace DGC.Sample.Domain.Entities;
 
 public partial class Order
@@ -20,6 +17,4 @@ public partial class Order
     public bool IsDeleted { get; set; }
 
     public DateTime? ModifiedAtUtc { get; set; }
-
-    public string TenantId { get; set; } = null!;
 }

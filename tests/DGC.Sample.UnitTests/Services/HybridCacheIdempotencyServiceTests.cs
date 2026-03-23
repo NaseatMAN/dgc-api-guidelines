@@ -72,6 +72,23 @@ public sealed class HybridCacheIdempotencyServiceTests
         result.State.Should().Be(IdempotencyExecutionState.Started);
     }
 
+    [Fact]
+    public async Task TryStartRequestAsync_WhenTwoRequestsUseSameKeyConcurrently_ShouldAllowOnlyOneStart()
+    {
+        var cache = CreateHybridCache();
+        var service = new HybridCacheIdempotencyService(cache);
+        var idempotencyKey = Guid.NewGuid().ToString("N");
+        const string requestHash = "hash-1";
+
+        var firstAttempt = Task.Run(() => service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None));
+        var secondAttempt = Task.Run(() => service.TryStartRequestAsync(idempotencyKey, requestHash, CancellationToken.None));
+
+        var results = await Task.WhenAll(firstAttempt, secondAttempt);
+
+        results.Count(result => result.State == IdempotencyExecutionState.Started).Should().Be(1);
+        results.Count(result => result.State == IdempotencyExecutionState.Processing).Should().Be(1);
+    }
+
     private static HybridCache CreateHybridCache()
     {
         var services = new ServiceCollection();

@@ -399,3 +399,12 @@ This project is intended for **internal team usage** and follows organizational 
 ## 📞 Support
 
 For architecture questions, improvements, or clarifications, contact the backend architecture team or project maintainers.
+
+
+
+## Migration script
+
+dotnet ef migrations add removeTanant --project src/DGC.Sample.Infrastructure/DGC.Sample.Infrastructure.csproj --startup-project src/DGC.Sample.Api/DGC.Sample.Api.csproj --context AppDbContext --output-dir Persistence/Migrations
+
+
+ dotnet ef database update initMigration --project src/DGC.Sample.Infrastructure/DGC.Sample.Infrastructure.csproj --startup-project src/DGC.Sample.Api/DGC.Sample.Api.csproj --context AppDbContext

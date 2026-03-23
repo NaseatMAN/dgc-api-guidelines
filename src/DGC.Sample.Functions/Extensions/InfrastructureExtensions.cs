@@ -19,9 +19,11 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddFunctionInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var defaultConnection =
-            configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=dgc_sample;Username=postgres;Password=password";
+        var defaultConnection = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(defaultConnection))
+        {
+            throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+        }
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(defaultConnection)
