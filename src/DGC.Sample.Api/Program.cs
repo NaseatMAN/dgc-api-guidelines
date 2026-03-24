@@ -21,4 +21,4 @@ app.MapControllers();
 
 app.Run();
 
-public partial class Program;
+internal abstract partial class Program;

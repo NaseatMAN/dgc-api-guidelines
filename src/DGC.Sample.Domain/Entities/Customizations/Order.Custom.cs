@@ -1,7 +1,5 @@
-using DGC.Sample.Domain.Interfaces;
-
 namespace DGC.Sample.Domain.Entities;
 
-public partial class Order : ISoftDeletable, IAuditable
+public partial class Order
 {
 }

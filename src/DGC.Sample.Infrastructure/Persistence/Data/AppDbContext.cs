@@ -23,7 +23,6 @@ public partial class AppDbContext : DbContext
             entity.ToTable("orders");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CreatedAtUtc).HasDefaultValueSql("'-infinity'::timestamp with time zone");
             entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
         });

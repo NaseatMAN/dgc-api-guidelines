@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Dtos;
-using DGC.Sample.Application.Interfaces;
+using DGC.Sample.Application.Interfaces.ExternalServices;
 using DGC.Sample.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,9 +10,10 @@ namespace DGC.Sample.Api.Controllers;
 [ApiController]
 [ApiVersion("2026-02-05")]
 [Route("users")]
-public sealed class UsersController(IUserService userService) : ControllerBase
+public sealed class UsersController(IUserService userService, IPublicUserLookupClient publicUserLookupClient) : ControllerBase
 {
     private readonly IUserService _userService = userService;
+    private readonly IPublicUserLookupClient _publicUserLookupClient = publicUserLookupClient;
 
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<UserResponse>), StatusCodes.Status200OK)]
@@ -36,6 +37,15 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var user = await _userService.GetByIdAsync(id, cancellationToken);
+        return user is null ? NotFound() : Ok(user);
+    }
+
+    [HttpGet("mock-public/{id:int}")]
+    [ProducesResponseType(typeof(PublicUserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMockPublicUser(int id, CancellationToken cancellationToken)
+    {
+        var user = await _publicUserLookupClient.GetUserByIdAsync(id, cancellationToken);
         return user is null ? NotFound() : Ok(user);
     }
 

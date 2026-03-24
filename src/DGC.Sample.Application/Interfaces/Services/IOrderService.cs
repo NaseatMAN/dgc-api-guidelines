@@ -6,6 +6,7 @@ namespace DGC.Sample.Application.Interfaces.Services;
 public interface IOrderService
 {
     Task<IReadOnlyList<OrderResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<OffsetPagedResponse<OrderResponse>> GetPagingAsync(int offset, int limit, CancellationToken cancellationToken);
     Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken);
     Task<IReadOnlyList<OrderResponse>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken);
     Task<OrderResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);

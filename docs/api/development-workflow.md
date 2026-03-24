@@ -26,7 +26,7 @@ If an entity needs to implement a domain interface (e.g., `ISoftDeletable`, `IAu
 // src/DGC.Sample.Domain/Entities/Customizations/User.Custom.cs
 namespace DGC.Sample.Domain.Entities;
 
-public partial class User : ISoftDeletable, ITenantEntity, IAuditable
+public partial class User : ISoftDeletable, IAuditable
 {
     // Custom logic or properties that aren't in the DB
     public string DisplayName => $"{FullName} ({Email})";

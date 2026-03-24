@@ -11,23 +11,23 @@ public sealed record UserResponse(
     DateTime CreatedAtUtc);
 
 public sealed record UserCreateRequest(
-    [property: NotWhiteSpace]
-    [property: StringLengthRange(1, 200)]
+    [NotWhiteSpace]
+    [StringLengthRange(1, 200)]
     string FullName,
-    [property: CambodiaNationalId]
+    [CambodiaNationalId]
     string NationalId,
-    [property: CambodiaPhoneNumber]
+    [CambodiaPhoneNumber]
     string PhoneNumber,
-    [property: RequiredEmail]
+    [RequiredEmail]
     string Email);
 
 public sealed record UserUpdateRequest(
-    [property: NotWhiteSpace]
-    [property: StringLengthRange(1, 200)]
+    [NotWhiteSpace]
+    [StringLengthRange(1, 200)]
     string FullName,
-    [property: CambodiaNationalId]
+    [CambodiaNationalId]
     string NationalId,
-    [property: CambodiaPhoneNumber]
+    [CambodiaPhoneNumber]
     string PhoneNumber,
-    [property: RequiredEmail]
+    [RequiredEmail]
     string Email);

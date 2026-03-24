@@ -21,6 +21,23 @@ public sealed class OrderService(IOrderRepository orderRepository, IUnitOfWork u
         return Task.FromResult<IReadOnlyList<OrderResponse>>([.. orders.Select(OrderMapper.ToResponse)]);
     }
 
+    public async Task<OffsetPagedResponse<OrderResponse>> GetPagingAsync(int offset, int limit, CancellationToken cancellationToken)
+    {
+        var query = _orderRepository.QueryAsNoTracking()
+            .OrderBy(order => order.OrderDateUtc);
+
+        var page = await _orderRepository.GetPagedAsync(query, offset, limit, cancellationToken);
+
+        return new OffsetPagedResponse<OrderResponse>
+        {
+            Items = [.. page.Items.Select(OrderMapper.ToResponse)],
+            Offset = page.Offset,
+            Limit = page.Limit,
+            TotalCount = page.TotalCount,
+            NextLink = page.HasNextPage ? string.Empty : null
+        };
+    }
+
     public async Task<IReadOnlyList<OrderResponse>> SearchAsync(OrderStatus? status, string? customerName, CancellationToken cancellationToken)
     {
         var spec = new OrderFilterSpec(status, customerName);

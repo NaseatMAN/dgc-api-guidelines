@@ -1,3 +1,4 @@
+using DGC.Sample.Application.Common;
 using DGC.Sample.Application.Interfaces.Repositories;
 using DGC.Sample.Domain.Specifications;
 using DGC.Sample.Infrastructure.Persistence.Data;
@@ -89,6 +90,27 @@ namespace DGC.Sample.Infrastructure.Persistence.Repositories
         public virtual IQueryable<TEntity> QueryAsNoTracking()
         {
             return DbSet.AsNoTracking();
+        }
+
+        public virtual async Task<OffsetPage<TEntity>> GetPagedAsync(
+            IQueryable<TEntity> query,
+            int offset,
+            int limit,
+            CancellationToken cancellationToken)
+        {
+            var totalCount = await query.CountAsync(cancellationToken);
+            var items = await query
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+
+            return new OffsetPage<TEntity>
+            {
+                Items = items,
+                Offset = offset,
+                Limit = limit,
+                TotalCount = totalCount
+            };
         }
 
         protected IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification)

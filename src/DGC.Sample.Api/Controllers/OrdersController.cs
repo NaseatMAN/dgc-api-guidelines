@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DGC.Sample.Api.Extensions;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Common.Queue;
 using DGC.Sample.Application.Dtos;
@@ -30,6 +31,29 @@ public sealed class OrdersController : ControllerBase
     {
         var orders = await _orderService.GetAllAsync(cancellationToken);
         return Ok(orders);
+    }
+
+    [HttpGet("getPaging")]
+    [ProducesResponseType(typeof(OffsetPagedResponse<OrderResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPaging(
+        [FromQuery] OffsetPagingRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var orders = await _orderService.GetPagingAsync(request.Offset, request.Limit, cancellationToken);
+        var nextOffset = request.Offset + request.Limit;
+
+        var response = new OffsetPagedResponse<OrderResponse>
+        {
+            Items = orders.Items,
+            Offset = orders.Offset,
+            Limit = orders.Limit,
+            TotalCount = orders.TotalCount,
+            NextLink = nextOffset < orders.TotalCount
+                ? Request.BuildPagingNextLink(nextOffset, request.Limit)
+                : null
+        };
+
+        return Ok(response);
     }
 
     [HttpGet("search")]

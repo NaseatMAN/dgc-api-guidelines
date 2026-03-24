@@ -26,6 +26,7 @@ public static class OrderMapper
             CustomerName = request.CustomerName,
             OrderDateUtc = request.OrderDateUtc,
             Status = (int)request.Status,
+            IsDeleted = false,
             TotalAmount = request.TotalAmount
         };
     }
