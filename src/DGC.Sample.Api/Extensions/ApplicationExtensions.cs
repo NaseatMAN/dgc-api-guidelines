@@ -9,6 +9,7 @@ public static class ApplicationExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IStorageService, StorageService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<INotificationChannelSender, EmailNotificationChannelSender>();
         services.AddScoped<INotificationChannelSender, TelegramNotificationChannelSender>();

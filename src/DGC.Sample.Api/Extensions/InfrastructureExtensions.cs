@@ -5,6 +5,8 @@ using DGC.Sample.Infrastructure.Persistence.Data;
 using DGC.Sample.Infrastructure.Persistence.Repositories.Purchases;
 using DGC.Sample.Infrastructure.Persistence.Repositories.UserMgmt;
 using DGC.Sample.Infrastructure.Persistence.UnitOfWorks;
+using DGC.Sample.Infrastructure.Storage;
+using DGC.Sample.Application.Interfaces.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace DGC.Sample.Api.Extensions;
@@ -19,6 +21,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IFileStorageService, FileStorageService>();
 
         services.AddExternalApiHttpClients(configuration);
 
