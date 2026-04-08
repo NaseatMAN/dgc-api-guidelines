@@ -324,6 +324,8 @@ Idempotency-Key: 7f41dba9-8f61-4dc5-8fd8-5f2d0e6a6f1f
 - Keep secrets and connection strings out of source control.
 - Prefer managed identities for service-to-service access where supported.
 
+Authentication should be enabled based on business requirements, not by template habit. The sample solution includes optional OIDC-backed bearer and API-key examples so teams can adopt a known-good pattern without forcing every service to authenticate the same way. In the sample project, authentication is selected by applying or omitting controller attributes in code, while authentication settings live in User Secrets rather than appsettings.
+
 ## 16. CORS and OPTIONS handling
 
 - Configure CORS centrally in APIM where possible.

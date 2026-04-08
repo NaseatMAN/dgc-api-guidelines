@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using DGC.Sample.Api.Extensions;
 using DGC.Sample.Api.Filters;
 using DGC.Sample.Application.Common.Queue;
 using DGC.Sample.Application.Dtos;
@@ -6,6 +7,7 @@ using DGC.Sample.Application.Dtos.Queue;
 using DGC.Sample.Application.Interfaces.Queue;
 using DGC.Sample.Application.Interfaces.Services;
 using DGC.Sample.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DGC.Sample.Api.Controllers;
@@ -84,8 +86,11 @@ public sealed class OrdersController : ControllerBase
 
     [HttpPost("{id:guid}/publish-azure")]
     [ServiceFilter(typeof(IdempotencyFilter))]
+    // Sample OIDC bearer auth: keep or remove this attribute in code depending on whether the endpoint should require bearer authentication.
+    // [Authorize(AuthenticationSchemes = ApiAuthenticationExtension.OidcJwtBearerScheme)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> PublishToAzureQueue(
         Guid id,
         [FromQuery] string? queueName,

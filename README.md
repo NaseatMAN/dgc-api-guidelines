@@ -137,6 +137,8 @@ All backend services must implement:
 - Input validation for all requests
 - Secure secret management (no secrets in code)
 
+Authentication is driven by business requirements. This sample includes optional OIDC-backed bearer and API-key examples, but they are reference implementations rather than mandatory defaults. Apply or remove the authentication attributes in controllers at compile time depending on whether an endpoint should require OIDC, API key, both, or neither.
+
 ### Current API Response Shapes
 
 Successful responses return DTO payloads directly from controllers.
@@ -277,6 +279,8 @@ Current keys moved to User Secrets:
 - `Notifications:Telegram:BaseUrl`
 - `ExternalApis:JsonPlaceholder:BaseUrl`
 - `ExternalApis:JsonPlaceholder:TimeoutSeconds`
+- `Authentication:Oidc:*`
+- `Authentication:ApiKey:*`
 - `AzureWebJobsStorage` (when API publishes to Azure queue)
 - `Queue:Azure:QueueName` (queue used by API Azure transport)
 
@@ -301,6 +305,30 @@ dotnet user-secrets set "Notifications:Email:FromAddress" "noreply@example.com"
 dotnet user-secrets set "Notifications:Email:FromDisplayName" "DGC Sample"
 dotnet user-secrets set "Notifications:Email:Username" "mock@example.com"
 dotnet user-secrets set "Notifications:Email:Password" "mock_email_password"
+dotnet user-secrets set "Notifications:Telegram:Enabled" "false"
+dotnet user-secrets set "Notifications:Telegram:BotToken" "mock_telegram_bot_token"
+dotnet user-secrets set "Notifications:Telegram:BaseUrl" "https://api.telegram.org"
+dotnet user-secrets set "ExternalApis:JsonPlaceholder:BaseUrl" "https://jsonplaceholder.typicode.com"
+dotnet user-secrets set "ExternalApis:JsonPlaceholder:TimeoutSeconds" "30"
+```
+
+Optional authentication samples:
+
+```bash
+cd src/DGC.Sample.Api
+dotnet user-secrets set "Authentication:Oidc:Authority" "https://auth.example.gov/realms/backend"
+dotnet user-secrets set "Authentication:Oidc:MetadataAddress" "https://auth.example.gov/realms/backend/.well-known/openid-configuration"
+dotnet user-secrets set "Authentication:Oidc:Audience" "dgc-sample-api"
+dotnet user-secrets set "Authentication:Oidc:RequireHttpsMetadata" "true"
+dotnet user-secrets set "Authentication:Oidc:ValidIssuers:0" "https://auth.example.gov/realms/backend"
+
+dotnet user-secrets set "Authentication:ApiKey:HeaderName" "X-Api-Key"
+dotnet user-secrets set "Authentication:ApiKey:EndpointKeys:storage-write:0" "dev-storage-write-key"
+dotnet user-secrets set "Authentication:ApiKey:EndpointKeys:storage-read:0" "dev-storage-read-key"
+dotnet user-secrets set "Authentication:ApiKey:EndpointKeys:storage-read:1" "dev-storage-read-key-backup"
+```
+
+The sample endpoints in `OrdersController` and `StorageController` show how to apply these authentication options with clear comments. Authentication is not toggled by environment flags in the sample; controller attributes are the compile-time selection point.
 dotnet user-secrets set "Notifications:Telegram:Enabled" "false"
 dotnet user-secrets set "Notifications:Telegram:BotToken" "mock_telegram_bot_token"
 dotnet user-secrets set "Notifications:Telegram:BaseUrl" "https://api.telegram.org/"

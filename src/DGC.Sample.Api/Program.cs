@@ -1,6 +1,8 @@
 using DGC.Sample.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+// Optional authentication samples are registered once; endpoint attributes decide at compile time whether an action requires OIDC, API key, both, or neither.
+builder.Services.ConfigureApiAuthentication(builder.Configuration);
 builder.Services.AddApiControllersWithAzureValidation();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -16,6 +18,8 @@ var app = builder.Build();
 app.UseApiMiddlewares();
 app.UseSwaggerConfiguration();
 app.UseHttpsRedirection();
+// Authentication must run before authorization when sample auth attributes are applied to endpoints.
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
