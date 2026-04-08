@@ -41,8 +41,9 @@
   - `dotnet restore DGC.Sample.slnx`
   - `dotnet build DGC.Sample.slnx`
   - `dotnet test DGC.Sample.slnx`
+  - `./scripts/migrate.ps1`
   - `dotnet run --project src/DGC.Sample.Api`
-- EF migrations target infrastructure with API as startup project (see commands in `README.md`).
+- Startup does not apply EF migrations automatically; run `./scripts/migrate.ps1` or the equivalent `dotnet ef database update` command before local runs when schema changes are pending.
 
 ## Testing patterns in this repo
 - Unit tests use xUnit + NSubstitute + FluentAssertions (`tests/DGC.Sample.UnitTests`).

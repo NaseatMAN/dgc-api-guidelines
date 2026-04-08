@@ -235,7 +235,25 @@ For detailed instructions on scaffolding, resolving build errors, and maintainin
 ## 🗄 Database Setup
 
 1. Ensure PostgreSQL is running (e.g., via `docker-compose up -d`).
-2. Run the scaffolding command (see the [Workflow Guide](docs/api/development-workflow.md#step-2-run-scaffolding) for the full command).
+2. Apply pending EF Core migrations manually before starting the API or Functions host.
+3. Run the scaffolding command when the database schema changes and entity classes must be regenerated (see the [Workflow Guide](docs/api/development-workflow.md#step-2-run-scaffolding) for the full command).
+
+The entrypoint projects no longer apply database migrations during startup. Keep schema updates as an explicit local or deployment step.
+
+Apply migrations from the repository root:
+
+```powershell
+./scripts/migrate.ps1
+```
+
+Equivalent EF Core command:
+
+```bash
+dotnet ef database update \
+  --project src/DGC.Sample.Infrastructure/DGC.Sample.Infrastructure.csproj \
+  --startup-project src/DGC.Sample.Api/DGC.Sample.Api.csproj \
+  --context AppDbContext
+```
 
 ### Local secrets (User Secrets)
 
@@ -303,6 +321,7 @@ Notes:
 - `src/DGC.Sample.Api/appsettings.json` omits secret keys and the entire `Notifications` section; provide all notification settings via User Secrets or environment variables.
 - `ConnectionStrings:BlobStorage` should be stored in User Secrets or environment variables.
 - `AzureWebJobsStorage` is required by Azure Functions queue triggers and should remain secret-backed outside source control.
+- Run `./scripts/migrate.ps1` after connection string or schema changes and before `dotnet run` because migrations are not executed automatically on startup.
 - Use `UseDevelopmentStorage=true` as a local mock/default value (Azurite/local emulator scenario).
 - `AzureFunctions:QueueName` should be lowercase and compatible with Azure queue naming rules.
 - API Azure transport uses `Queue:Azure:QueueName` (falls back to `AzureFunctions:QueueName`).
