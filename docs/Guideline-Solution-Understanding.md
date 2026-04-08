@@ -1,5 +1,7 @@
 # DGC API Guideline Solution Understanding
 
+> Note: This is a presenter briefing and target-state framing document. It includes governance direction and presentation language that may be broader than the exact current implementation.
+
 ## Purpose of this document
 This document summarizes what is implemented in the guideline solution and explains why the management slide content is structured the way it is.
 

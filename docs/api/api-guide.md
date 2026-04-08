@@ -10,58 +10,55 @@ This document follows Microsoft REST API Guidelines and aligns with the Azure We
 - Consistent: same patterns for naming, paging, errors, and versioning.
 - Predictable: safe and idempotent methods behave as expected.
 - Secure by default: least privilege, zero trust, and secure defaults.
-- Operable: traceable, observable, and diagnosable via correlation IDs.
+- Operable: traceable, observable, and diagnosable via request identifiers.
 - Backward compatible: additive changes only; avoid breaking existing clients.
 
 ## 2. Project structure best practices
 
 Use a clean, layered layout with explicit boundaries and minimal coupling. Keep API, application, domain, and infrastructure concerns isolated and testable.
 
-Recommended solution layout:
+Current solution layout in this repository:
 
 ```
 src/
-  MyProject.Domain/
-    Entities/        # Database tables class (auto-generated)
-    Dtos/            # Business logic class
-    Events/          # Objects for background and external tasks
-    Enums/           # All lookups
-    Constants/       # All constants
-    Exceptions/      # Custom exception
-  MyProject.Application/
-    Abstractions/
-      Interfaces/    # Interfaces for UnitOfWork, Application, Infrastructure
-      Abstracts/     # Base overridable class for business services
-    Features/
-      Orders/        # Module service
-        Commands/    # Module commands
-        Queries/     # Module queries
-        Handlers/    # Module handlers
-        Dtos/        # Module DTOs
-      User/          # Non-module service
-        UserRepository/ # Table user repository class
-        UserService/    # User business logic
-    Validations/     # Validation attribute model state
-    Mappers/         # Static mapper class for DTO <-> entity
-    Utils/           # Extra static methods for existing classes
-    Exceptions/      # Custom exception
-  MyProject.Infrastructure/
+  DGC.Sample.Domain/
+    Entities/
+    Enums/
+    Constants/
+    Exceptions/
+    Specifications/
+  DGC.Sample.Application/
+    Common/
+    Dtos/
+    Interfaces/
+    Mappings/
+    Services/
+    Utils/
+    Validators/
+  DGC.Sample.Infrastructure/
+    ExternalServices/
+      Caching/
     Persistence/
-      Context/       # DB context class (auto-generated)
-      Migrations/    # Migration scripts and documentation (optional)
-      Repositories/  # Repository generic pattern
-    Caching/         # Redis and in-memory caching with framework
-    FileStorage/     # Blob service or file operations
-    ExternalServices/ # HTTP call external API
-  MyProject.Api/
-    Controllers/     # API endpoints
-    Extensions/      # Static methods for registering services
-    Filters/         # API filters and action filter attributes
-    Middlewares/     # API middleware logic
+      Data/
+      Repositories/
+      UnitOfWorks/
+    Queue/
+    Storage/
+  DGC.Sample.Api/
+    Controllers/
+    Extensions/
+    Filters/
+    Middlewares/
+    Attributes/
+    Program.cs
+  DGC.Sample.Functions/
+    Configuration/
+    Extensions/
+    Functions/
     Program.cs
 tests/
-  MyProject.UnitTests/
-  MyProject.IntegrationTests/
+  DGC.Sample.UnitTests/
+  DGC.Sample.IntegrationTests/
 docs/
   api/
 ```
@@ -97,14 +94,12 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 Apply API Management policies consistently:
 
-- Validate JWT and enforce required scopes or roles at the gateway.
 - Apply rate limits and quotas by product and subscription.
-- Normalize headers (e.g., `x-correlation-id`) and reject oversized payloads.
+- Normalize headers (for the current sample, `x-ms-request-id`) and reject oversized payloads.
 - Cache only idempotent `GET` responses when data is safe to cache.
 
 Example policies:
 
-- `validate-jwt`
 - `rate-limit-by-key`
 - `quota-by-key`
 - `set-header`
@@ -180,8 +175,8 @@ Use status codes consistently with Microsoft guidance:
 - `204 No Content` successful `DELETE` or `PATCH` with no body
 - `304 Not Modified` caching
 - `400 Bad Request` validation errors
-- `401 Unauthorized` missing or invalid token
-- `403 Forbidden` authenticated but not authorized
+- `401 Unauthorized` request credentials are missing or rejected
+- `403 Forbidden` request is not allowed
 - `404 Not Found` resource not found
 - `409 Conflict` version or state conflict
 - `412 Precondition Failed` ETag mismatch
@@ -322,28 +317,12 @@ POST /payments
 Idempotency-Key: 7f41dba9-8f61-4dc5-8fd8-5f2d0e6a6f1f
 ```
 
-## 15. Authentication and authorization
+## 15. Transport security
 
-Use OAuth 2.0 with OpenID Connect.
-
-- APIM validates tokens and forwards claims to the backend.
-- Use scoped access: `scp` or `roles` claims.
 - Require TLS 1.2+.
-- Use managed identities for service-to-service calls.
-
-Authorization guidelines:
-
-- Enforce least privilege by default.
-- Use resource-based authorization (owner, tenant, role).
-- Validate tenant boundary in every request.
-
-Short ASP.NET Core example:
-
-```csharp
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-[HttpGet("customers/{customerId}")]
-public IActionResult GetCustomer(string customerId) => Ok();
-```
+- Use HTTPS end to end.
+- Keep secrets and connection strings out of source control.
+- Prefer managed identities for service-to-service access where supported.
 
 ## 16. CORS and OPTIONS handling
 
@@ -357,7 +336,7 @@ Example response headers:
 ```
 Access-Control-Allow-Origin: https://portal.contoso.gov
 Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
-Access-Control-Allow-Headers: Authorization, Content-Type, Idempotency-Key
+Access-Control-Allow-Headers: Content-Type, Idempotency-Key
 ```
 
 ## 17. Observability: Logging, Tracing, and Metrics
@@ -490,11 +469,10 @@ Before publishing an API:
 
 - Resource model reviewed and approved.
 - Versioning and deprecation plan documented.
-- Authentication and authorization tested with least privilege.
 - Azure API Guideline error responses implemented and validated.
 - Correlation ID and tracing confirmed end-to-end.
 - Health checks and dependency monitoring enabled.
-- APIM policies applied (JWT validation, throttling, headers).
+- APIM policies applied (throttling, headers).
 - Security review completed and threat model recorded.
 
 ## 24. References

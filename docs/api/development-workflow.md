@@ -2,36 +2,28 @@
 
 ## Overview
 
-This project follows a **Database-First** approach using Entity Framework Core. The database schema is the single source of truth for the data model. Application-specific logic, interfaces, and metadata are maintained using C# **partial classes**.
+This project follows a **Database-First** approach using Entity Framework Core. The database schema is the single source of truth for the data model.
+
+The sample keeps scaffolded entity files directly in `src/DGC.Sample.Domain/Entities/`.
 
 ## The Golden Rule
 >
 > **NEVER manually edit auto-generated files.**
 > Any file named `EntityName.cs` in the `Entities` root folder will be overwritten during the next scaffolding run.
 
-## Entity Customization Pattern
+## Entity File Layout
 
 ### 1. File Organization
 
-All entities are split into two parts:
+Current entity files live in the `Entities` root folder:
 
 - **`src/.../Domain/Entities/EntityName.cs`**: Auto-generated. Contains DB-mapped properties.
-- **`src/.../Domain/Entities/Customizations/EntityName.Custom.cs`**: Developer-owned. Contains interfaces, business logic, and extra properties.
 
-### 2. Implementing Interfaces
+Keep this document aligned with the actual repository layout if entity extension patterns change.
 
-If an entity needs to implement a domain interface (e.g., `ISoftDeletable`, `IAuditable`), declare it in the `.Custom.cs` file:
+### 2. Extension Guidance
 
-```csharp
-// src/DGC.Sample.Domain/Entities/Customizations/User.Custom.cs
-namespace DGC.Sample.Domain.Entities;
-
-public partial class User : ISoftDeletable, IAuditable
-{
-    // Custom logic or properties that aren't in the DB
-    public string DisplayName => $"{FullName} ({Email})";
-}
-```
+If extra behavior is needed around scaffolded entities, document the chosen pattern alongside the code that introduces it.
 
 ## Scaffolding Workflow
 
@@ -59,11 +51,13 @@ dotnet ef dbcontext scaffold "Host=localhost;Database=dgc_sample;Username=postgr
 
 ### Step 3: Resolve Build Errors
 
-After scaffolding, you may see **CS0102 (Duplicate definition)** errors.
+After scaffolding, you may see **CS0102 (Duplicate definition)** errors if custom code was added directly into generated types.
 
-- **Reason**: A property you previously added manually to `.Custom.cs` (like `IsDeleted`) is now part of the database schema and was scaffolded into the main `.cs` file.
-- **Solution**: Delete the property definition from your `.Custom.cs` file. The interface will now automatically use the "official" property from the scaffolded file.
+- **Reason**: A property or member you added manually now also exists in the regenerated scaffolded file.
+- **Solution**: Remove the duplicate manual member and keep the scaffolded definition as the source of truth.
 
 ## DbContext Customization
 
-To add Global Query Filters or custom configurations to the scaffolded `AppDbContext`, use the `OnModelCreatingPartial` method in `src/DGC.Sample.Infrastructure/Persistence/Data/AppDbContext.Custom.cs`. This method is called automatically at the end of the generated `OnModelCreating`.
+The scaffolded `AppDbContext` already exposes `OnModelCreatingPartial` in `src/DGC.Sample.Infrastructure/Persistence/Data/AppDbContext.cs`.
+
+If the team decides to extend it with a separate partial file later, add that file explicitly and update this workflow document to point to the real path.

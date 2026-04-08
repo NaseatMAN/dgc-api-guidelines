@@ -35,7 +35,7 @@
 
 ## Local development workflow
 - Start local dependencies: `docker compose up -d` (PostgreSQL 16 + Redis 7 from `docker-compose.yml`).
-- Set local secrets in `src/DGC.Sample.Api`: `ConnectionStrings:DefaultConnection`, `ConnectionStrings:Redis` (see `README.md`).
+- Set local secrets in `src/DGC.Sample.Api`: `ConnectionStrings:DefaultConnection`, `ConnectionStrings:BlobStorage`, `ConnectionStrings:Redis` (see `README.md`).
 - For Azure Function local runs, also set `AzureWebJobsStorage` (mock default: `UseDevelopmentStorage=true`) and `AzureFunctions:QueueName` in User Secrets/environment.
 - Common commands from repo root:
   - `dotnet restore DGC.Sample.slnx`

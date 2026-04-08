@@ -66,16 +66,16 @@ services.TryAddEnumerable(ServiceDescriptor.Singleton<IProblemDetailsWriter, Azu
 
 ## 3. Validation Errors
 
-When model validation fails, the API returns a `400 Bad Request` with the `code` set to `InvalidModel` and the `details` array containing the specific field errors.
+When model validation fails, the API returns a `400 Bad Request` with the `code` set to `invalid_document` and the `details` array containing the specific field errors.
 
 ```json
 {
   "error": {
-    "code": "InvalidModel",
+    "code": "invalid_document",
     "message": "One or more validation errors occurred.",
     "details": [
       {
-        "code": "InvalidModel.Email",
+        "code": "invalid_document.Email",
         "message": "Email must be a valid address.",
         "target": "Email"
       }

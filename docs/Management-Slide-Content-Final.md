@@ -1,5 +1,7 @@
 # Slide Content for Management Presentation
 
+> Note: This document defines target-state presentation content. It should not be treated as a line-by-line implementation snapshot.
+
 ## Slide 1: Title
 DGC API Guideline Standard
 Enterprise Backend Standards for Reliability, Security, and Operability

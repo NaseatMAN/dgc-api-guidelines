@@ -4,7 +4,7 @@ We use custom `ValidationAttribute` implementations (overriding `IsValid`) for r
 
 ## Implementation Overview
 
-1. **Custom Attributes**: Defined in `DGC.Sample.Application/Common/Validation/`.
+1. **Custom Attributes**: Defined in `DGC.Sample.Application/Validators/`.
 2. **DTOs**: Request DTOs are decorated with validation attributes.
 3. **Automatic Validation**: Executed by ASP.NET Core model validation for `[ApiController]` endpoints.
 4. **Error Responses**: Validation failures are mapped to the Azure REST API error envelope via `ApiBehaviorOptions.InvalidModelStateResponseFactory`.
@@ -14,7 +14,7 @@ We use custom `ValidationAttribute` implementations (overriding `IsValid`) for r
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace DGC.Sample.Application.Common.Validation;
+namespace DGC.Sample.Application.Validators;
 
 public sealed class NonDefaultDateTimeAttribute : ValidationAttribute
 {
@@ -53,11 +53,11 @@ When validation fails, the API returns a `400 Bad Request` in the Azure-style en
 ```json
 {
   "error": {
-    "code": "BadArgument",
+    "code": "invalid_document",
     "message": "One or more validation errors occurred.",
     "details": [
       {
-        "code": "BadArgument.CustomerName",
+        "code": "invalid_document.CustomerName",
         "message": "CustomerName is required.",
         "target": "CustomerName"
       }

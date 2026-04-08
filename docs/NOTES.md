@@ -1,4 +1,8 @@
-## Session notes
+## Working Notes
+
+This file contains internal working notes.
+
+It is not an authoritative implementation document. For current technical behavior, prefer `README.md`, `docs/api/*.md`, and the source files under `src/`.
 
 ### Resume shortcuts
 
@@ -13,24 +17,23 @@
 
 ### CRUD sample (Orders)
 
-- API routes (date-based): `GET/POST /2026-02-04/orders`, `GET/PUT/DELETE /2026-02-04/orders/{id}`.
+- API routes (date-based): `GET/POST /orders?api-version=2026-02-05`, `GET/PUT/DELETE /orders/{id}?api-version=2026-02-05`.
 - Controller: `src/DGC.Sample.Api/Controllers/OrdersController.cs`.
-- Service: `src/DGC.Sample.Application/Features/Orders/Handlers/OrderService.cs`.
-- DTOs: `src/DGC.Sample.Application/Features/Orders/Dtos/*.cs`.
+- Service: `src/DGC.Sample.Application/Services/OrderService.cs`.
+- DTOs: `src/DGC.Sample.Application/Dtos/*.cs`.
 - Entity + enum: `src/DGC.Sample.Domain/Entities/Order.cs`, `src/DGC.Sample.Domain/Enums/OrderStatus.cs`.
 
 ### Database
 
 - EF Core with PostgreSQL (Npgsql).
-- DbContext: `src/DGC.Sample.Infrastructure/Persistence/Context/AppDbContext.cs`.
-- Repository: `src/DGC.Sample.Infrastructure/Persistence/Repositories/OrderRepository.cs`.
+- DbContext: `src/DGC.Sample.Infrastructure/Persistence/Data/AppDbContext.cs`.
+- Repository: `src/DGC.Sample.Infrastructure/Persistence/Repositories/Purchases/OrderRepository.cs`.
 - DI: entrypoint-owned registration in `src/DGC.Sample.Api/Extensions/*.cs` and `src/DGC.Sample.Functions/Extensions/*.cs`.
 
 ### Configuration
 
 - Non-sensitive defaults live in:
   - `src/DGC.Sample.Api/appsettings.json`
-  - `src/DGC.Sample.Api/appsettings.Development.json`
 - Sensitive values are stored in User Secrets (local only):
   - `ConnectionStrings:DefaultConnection`
   - `ConnectionStrings:Redis`
@@ -38,7 +41,7 @@
 ### Tooling
 
 - EF Core packages pinned to `10.0.0`.
-- Swashbuckle pinned to `10.0.0` for Swagger UI.
+- Swashbuckle pinned centrally in `Directory.Packages.props`.
 
 ### README updates
 
@@ -50,7 +53,7 @@
 
 ### Secrets checklist (do not regress)
 
-- Keep `src/DGC.Sample.Api/appsettings.json` and `src/DGC.Sample.Api/appsettings.Development.json` tracked by git.
+- Keep `src/DGC.Sample.Api/appsettings.json` tracked by git.
 - Keep real credentials out of `appsettings*.json`.
 - Use User Secrets for local sensitive values.
 - Mock setup commands:

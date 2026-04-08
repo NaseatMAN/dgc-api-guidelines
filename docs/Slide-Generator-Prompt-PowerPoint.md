@@ -1,5 +1,7 @@
 # PowerPoint Slide Generator Prompt
 
+> Note: This prompt is for generating a target-state management deck. It is not an authoritative source for current implementation details.
+
 You are a senior PowerPoint deck creator for executive technical presentations.
 
 Build a presentation using the source documents below:

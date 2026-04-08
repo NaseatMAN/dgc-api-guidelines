@@ -47,7 +47,7 @@ API → Application → Domain ← Infrastructure
 
 ```
 src/
-├── ProjectName.Api
+├── DGC.Sample.Api
 │   ├── Controllers
 │   ├── Extensions
 │   ├── Filters
@@ -56,39 +56,41 @@ src/
 │   ├── Program.cs
 │   └── appsettings.json
 │
-├── ProjectName.Functions
+├── DGC.Sample.Functions
+│   ├── Configuration
 │   ├── Extensions
 │   ├── Functions
 │   ├── Program.cs
 │   └── host.json
 │
-├── ProjectName.Application
+├── DGC.Sample.Application
+│   ├── Common
 │   ├── Dtos
 │   ├── Interfaces
-│   ├── Services
-│   ├── Validators
 │   ├── Mappings
-│   └── Common
+│   ├── Services
+│   ├── Utils
+│   └── Validators
 │
-├── ProjectName.Domain
+├── DGC.Sample.Domain
 │   ├── Entities
 │   ├── Enums
-│   ├── ValueObjects
 │   ├── Constants
-│   └── Exceptions
+│   ├── Exceptions
+│   └── Specifications
 │
-├── ProjectName.Infrastructure
+├── DGC.Sample.Infrastructure
+│   ├── ExternalServices
 │   ├── Persistence
 │   │   ├── Data
-│   │   ├── Configurations
-│   │   └── Migrations
-│   ├── Repositories
-│   ├── ExternalServices
-│   └── Queue
+│   │   ├── Repositories
+│   │   └── UnitOfWorks
+│   ├── Queue
+│   └── Storage
 │
 tests/
-├── ProjectName.UnitTests
-├── ProjectName.IntegrationTests
+├── DGC.Sample.UnitTests
+├── DGC.Sample.IntegrationTests
 ```
 
 ---
@@ -98,7 +100,6 @@ tests/
 ### API Layer
 
 - HTTP endpoints
-- Authentication & Authorization
 - API versioning
 - Request/response handling
 - No business logic
@@ -132,20 +133,42 @@ tests/
 
 All backend services must implement:
 
-- API Key / JWT authentication
-- Role- and permission-based authorization
 - Centralized exception handling
 - Input validation for all requests
 - Secure secret management (no secrets in code)
 
-### Standard API Response Format
+### Current API Response Shapes
+
+Successful responses return DTO payloads directly from controllers.
 
 ```json
 {
-  "succeeded": true,
-  "message": "Success",
-  "data": {},
-  "errors": null
+  "id": "0d5a8f12-5f93-4b0f-a5c8-c0f3fdcb6a8b",
+  "customerName": "Contoso Ltd",
+  "orderDateUtc": "2026-02-04T08:30:00Z",
+  "status": 1,
+  "totalAmount": 2500.00
+}
+```
+
+Error responses use the Azure-style envelope.
+
+```json
+{
+  "error": {
+    "code": "invalid_document",
+    "message": "One or more validation errors occurred.",
+    "details": [
+      {
+        "code": "invalid_document.CustomerName",
+        "message": "CustomerName is required.",
+        "target": "CustomerName"
+      }
+    ],
+    "innererror": {
+      "traceId": "0HMA12345678"
+    }
+  }
 }
 ```
 
@@ -200,9 +223,9 @@ This project uses a **Database-First** approach with Entity Framework Core. The 
 
 ### Core Principles
 
-- **Partial Class Separation**: All entities are split into scaffolded `.cs` files and manual `.Custom.cs` files.
+- **Current Entity Layout**: The sample currently keeps scaffolded entity files directly in `src/DGC.Sample.Domain/Entities/`.
 - **No Manual Edits**: Never edit auto-generated entity files directly; they will be overwritten.
-- **Customizations**: Use the `Customizations/` folder for interfaces, logic, and calculated properties.
+- **Customization Guidance**: Keep the workflow guide aligned with the actual repository layout whenever entity customization patterns change.
 
 For detailed instructions on scaffolding, resolving build errors, and maintaining entity customizations, see:
 👉 **[Detailed Development Workflow Guide](docs/api/development-workflow.md)**
@@ -221,6 +244,7 @@ Sensitive settings are stored in .NET User Secrets for local development instead
 Current keys moved to User Secrets:
 
 - `ConnectionStrings:DefaultConnection`
+- `ConnectionStrings:BlobStorage`
 - `ConnectionStrings:Redis`
 - `Notifications:Email:Enabled`
 - `Notifications:Email:Host`
@@ -235,12 +259,10 @@ Current keys moved to User Secrets:
 - `Notifications:Telegram:BaseUrl`
 - `ExternalApis:JsonPlaceholder:BaseUrl`
 - `ExternalApis:JsonPlaceholder:TimeoutSeconds`
-- `Database:Resiliency:EnableRetryOnFailure`
-- `Database:Resiliency:MaxRetryCount`
-- `Database:Resiliency:MaxRetryDelaySeconds`
-- `Database:Resiliency:CommandTimeoutSeconds`
 - `AzureWebJobsStorage` (when API publishes to Azure queue)
 - `Queue:Azure:QueueName` (queue used by API Azure transport)
+
+Operational defaults such as `Database:Resiliency:*` remain in `src/DGC.Sample.Api/appsettings.json` because they are non-secret configuration.
 
 For Azure Function queue integration (local mock/default setup), also use:
 - `AzureWebJobsStorage`
@@ -251,6 +273,7 @@ Set mock values from command line:
 ```bash
 cd src/DGC.Sample.Api
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
+dotnet user-secrets set "ConnectionStrings:BlobStorage" "UseDevelopmentStorage=true"
 dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379,abortConnect=false"
 dotnet user-secrets set "Notifications:Email:Enabled" "false"
 dotnet user-secrets set "Notifications:Email:Host" "smtp.example.com"
@@ -265,20 +288,12 @@ dotnet user-secrets set "Notifications:Telegram:BotToken" "mock_telegram_bot_tok
 dotnet user-secrets set "Notifications:Telegram:BaseUrl" "https://api.telegram.org/"
 dotnet user-secrets set "ExternalApis:JsonPlaceholder:BaseUrl" "https://jsonplaceholder.typicode.com/"
 dotnet user-secrets set "ExternalApis:JsonPlaceholder:TimeoutSeconds" "10"
-dotnet user-secrets set "Database:Resiliency:EnableRetryOnFailure" "true"
-dotnet user-secrets set "Database:Resiliency:MaxRetryCount" "5"
-dotnet user-secrets set "Database:Resiliency:MaxRetryDelaySeconds" "30"
-dotnet user-secrets set "Database:Resiliency:CommandTimeoutSeconds" "30"
 dotnet user-secrets set "AzureWebJobsStorage" "UseDevelopmentStorage=true"
 dotnet user-secrets set "Queue:Azure:QueueName" "orders"
 dotnet user-secrets list
 
-cd ..\DGC.Sample.Functions
+cd ../DGC.Sample.Functions
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dgc_sample_dev;Username=postgres;Password=mock_dev_password"
-dotnet user-secrets set "Database:Resiliency:EnableRetryOnFailure" "true"
-dotnet user-secrets set "Database:Resiliency:MaxRetryCount" "5"
-dotnet user-secrets set "Database:Resiliency:MaxRetryDelaySeconds" "30"
-dotnet user-secrets set "Database:Resiliency:CommandTimeoutSeconds" "30"
 dotnet user-secrets set "AzureWebJobsStorage" "UseDevelopmentStorage=true"
 dotnet user-secrets set "AzureFunctions:QueueName" "orders"
 dotnet user-secrets list
@@ -286,10 +301,12 @@ dotnet user-secrets list
 
 Notes:
 - `src/DGC.Sample.Api/appsettings.json` omits secret keys and the entire `Notifications` section; provide all notification settings via User Secrets or environment variables.
+- `ConnectionStrings:BlobStorage` should be stored in User Secrets or environment variables.
 - `AzureWebJobsStorage` is required by Azure Functions queue triggers and should remain secret-backed outside source control.
 - Use `UseDevelopmentStorage=true` as a local mock/default value (Azurite/local emulator scenario).
 - `AzureFunctions:QueueName` should be lowercase and compatible with Azure queue naming rules.
 - API Azure transport uses `Queue:Azure:QueueName` (falls back to `AzureFunctions:QueueName`).
+- Blob uploads use `Storage:Blob:ContainerName` from `appsettings.json` and `ConnectionStrings:BlobStorage` from secrets.
 - Switch provider in code by using either `AddPostgresqlServer(...)` or `AddSqlServer(...)` in API `InfrastructureExtensions`.
 
 Run the Function host locally:
@@ -318,12 +335,12 @@ When omitted/empty, workers consume the default queue for their transport.
 
 ## Test the API (cURL)
 
-Base URL (default): `https://localhost:5288`
+Base URL (default HTTPS): `https://localhost:7150`
 
 Create:
 
 ```bash
-curl -k -X POST "https://localhost:5288/orders?api-version=2025-05-01" \
+curl -k -X POST "https://localhost:7150/orders?api-version=2026-02-05" \
   -H "Content-Type: application/json" \
   -d "{\"customerName\":\"Contoso Ltd\",\"orderDateUtc\":\"2026-02-04T08:30:00Z\",\"status\":1,\"totalAmount\":2500.00}"
 ```
@@ -331,19 +348,19 @@ curl -k -X POST "https://localhost:5288/orders?api-version=2025-05-01" \
 List:
 
 ```bash
-curl -k "https://localhost:5288/orders?api-version=2025-05-01"
+curl -k "https://localhost:7150/orders?api-version=2026-02-05"
 ```
 
 Get by id:
 
 ```bash
-curl -k "https://localhost:5288/orders/{id}?api-version=2025-05-01"
+curl -k "https://localhost:7150/orders/{id}?api-version=2026-02-05"
 ```
 
 Update:
 
 ```bash
-curl -k -X PUT "https://localhost:5288/orders/{id}?api-version=2025-05-01" \
+curl -k -X PUT "https://localhost:7150/orders/{id}?api-version=2026-02-05" \
   -H "Content-Type: application/json" \
   -d "{\"customerName\":\"Contoso Ltd\",\"orderDateUtc\":\"2026-02-05T08:30:00Z\",\"status\":2,\"totalAmount\":2600.00}"
 ```
@@ -351,14 +368,14 @@ curl -k -X PUT "https://localhost:5288/orders/{id}?api-version=2025-05-01" \
 Delete:
 
 ```bash
-curl -k -X DELETE "https://localhost:5288/orders/{id}?api-version=2025-05-01"
+curl -k -X DELETE "https://localhost:7150/orders/{id}?api-version=2026-02-05"
 ```
 
 ---
 
 ## Test the API (Postman)
 
-Base URL (example): `https://localhost:5288`
+Base URL (example): `https://localhost:7150`
 
 1. Create a new Collection.
 2. Add requests using the endpoints below.
@@ -366,7 +383,7 @@ Base URL (example): `https://localhost:5288`
 
 Create (POST):
 
-- URL: `https://localhost:5288/orders?api-version=2025-05-01`
+- URL: `https://localhost:7150/orders?api-version=2026-02-05`
 - Body (JSON):
 
 ```json
@@ -380,15 +397,15 @@ Create (POST):
 
 List (GET):
 
-- URL: `https://localhost:5288/orders?api-version=2025-05-01`
+- URL: `https://localhost:7150/orders?api-version=2026-02-05`
 
 Get by id (GET):
 
-- URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
+- URL: `https://localhost:7150/orders/{id}?api-version=2026-02-05`
 
 Update (PUT):
 
-- URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
+- URL: `https://localhost:7150/orders/{id}?api-version=2026-02-05`
 - Body (JSON):
 
 ```json
@@ -402,7 +419,7 @@ Update (PUT):
 
 Delete (DELETE):
 
-- URL: `https://localhost:5288/orders/{id}?api-version=2025-05-01`
+- URL: `https://localhost:7150/orders/{id}?api-version=2026-02-05`
 
 ---
 
