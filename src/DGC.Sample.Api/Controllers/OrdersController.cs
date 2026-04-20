@@ -15,16 +15,10 @@ namespace DGC.Sample.Api.Controllers;
 [ApiController]
 [ApiVersion("2026-02-05")]
 [Route("orders")]
-public sealed class OrdersController : ControllerBase
+public sealed class OrdersController(IOrderService orderService, IQueueService queueService) : ControllerBase
 {
-    private readonly IOrderService _orderService;
-    private readonly IQueueService _queueService;
-
-    public OrdersController(IOrderService orderService, IQueueService queueService)
-    {
-        _orderService = orderService;
-        _queueService = queueService;
-    }
+    private readonly IOrderService _orderService = orderService;
+    private readonly IQueueService _queueService = queueService;
 
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<OrderResponse>), StatusCodes.Status200OK)]
