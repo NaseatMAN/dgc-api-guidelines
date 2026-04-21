@@ -11,8 +11,8 @@ public sealed class QueueService(IServiceProvider provider, QueueServiceOptions 
 
     public async Task EnqueueAsync<T>(
         T item,
-        QueueTransport? transport = null,
-        CancellationToken cancellationToken = default)
+        QueueTransport? transport,
+        CancellationToken cancellationToken)
     {
         await EnqueueAsync(item, transport, queueName: null, cancellationToken).ConfigureAwait(false);
     }
@@ -21,7 +21,7 @@ public sealed class QueueService(IServiceProvider provider, QueueServiceOptions 
         T item,
         QueueTransport? transport,
         string? queueName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var selectedTransport = transport ?? _options.DefaultTransport;
         var resolver = _provider.GetRequiredService<ITransportResolver<T>>();
@@ -30,8 +30,8 @@ public sealed class QueueService(IServiceProvider provider, QueueServiceOptions 
     }
 
     public async Task<T?> DequeueAsync<T>(
-        QueueTransport? transport = null,
-        CancellationToken cancellationToken = default)
+        QueueTransport? transport,
+        CancellationToken cancellationToken)
         where T : class
     {
         return await DequeueAsync<T>(transport, queueName: null, cancellationToken).ConfigureAwait(false);
@@ -40,7 +40,7 @@ public sealed class QueueService(IServiceProvider provider, QueueServiceOptions 
     public async Task<T?> DequeueAsync<T>(
         QueueTransport? transport,
         string? queueName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         where T : class
     {
         var selectedTransport = transport ?? _options.DefaultTransport;

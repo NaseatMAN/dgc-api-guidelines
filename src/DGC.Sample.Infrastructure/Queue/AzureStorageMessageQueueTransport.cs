@@ -57,12 +57,12 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
 
     public QueueTransport TransportType => QueueTransport.AzureQueue;
 
-    public async Task EnqueueAsync(T item, CancellationToken token = default)
+    public async Task EnqueueAsync(T item, CancellationToken token)
     {
         await EnqueueAsync(item, queueName: null, token).ConfigureAwait(false);
     }
 
-    public async Task EnqueueAsync(T item, string? queueName, CancellationToken token = default)
+    public async Task EnqueueAsync(T item, string? queueName, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
@@ -90,18 +90,18 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
         await queueClient.SendMessageAsync(payload, cancellationToken: token).ConfigureAwait(false);
     }
 
-    public Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
+    public Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token)
     {
         return DequeueAsync(waitMs, queueName: null, token);
     }
 
-    public Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+    public Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token)
     {
         throw new NotSupportedException(
             "Azure queue dequeue is not supported through IQueueService. Use Azure Functions queue trigger consumption.");
     }
 
-    public Task AcknowledgeAsync(string envelopeId, CancellationToken token = default)
+    public Task AcknowledgeAsync(string envelopeId, CancellationToken token)
     {
         return Task.CompletedTask;
     }
@@ -112,7 +112,7 @@ public sealed class AzureStorageMessageQueueTransport<T> : IMessageQueueTranspor
         int retryDelayMs,
         ILogger logger,
         Exception exception,
-        CancellationToken token = default)
+        CancellationToken token)
     {
         throw new NotSupportedException(
             "Azure queue processing errors are handled by Azure Functions runtime retry/poison queue behavior.");

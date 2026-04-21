@@ -24,12 +24,12 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
 
     public QueueTransport TransportType => QueueTransport.Redis;
 
-    public async Task EnqueueAsync(T item, CancellationToken token = default)
+    public async Task EnqueueAsync(T item, CancellationToken token)
     {
         await EnqueueAsync(item, queueName: null, token).ConfigureAwait(false);
     }
 
-    public async Task EnqueueAsync(T item, string? queueName, CancellationToken token = default)
+    public async Task EnqueueAsync(T item, string? queueName, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
@@ -49,12 +49,12 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         await _database.ListLeftPushAsync(queueKey, payload).ConfigureAwait(false);
     }
 
-    public async Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
+    public async Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token)
     {
         return await DequeueAsync(waitMs, queueName: null, token).ConfigureAwait(false);
     }
 
-    public async Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+    public async Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
@@ -92,7 +92,7 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         return envelope;
     }
 
-    public async Task AcknowledgeAsync(string envelopeId, CancellationToken token = default)
+    public async Task AcknowledgeAsync(string envelopeId, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
@@ -114,7 +114,7 @@ public sealed class RedisMessageQueueTransport<T>(IConnectionMultiplexer multipl
         int retryDelayMs,
         ILogger logger,
         Exception exception,
-        CancellationToken token = default)
+        CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 

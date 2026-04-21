@@ -59,28 +59,28 @@ public sealed class QueueNameRoutingTests
 
         public string? LastQueueName { get; private set; }
 
-        public Task EnqueueAsync(T item, CancellationToken token = default)
+        public Task EnqueueAsync(T item, CancellationToken token)
         {
             LastQueueName = null;
             return Task.CompletedTask;
         }
 
-        public Task EnqueueAsync(T item, string? queueName, CancellationToken token = default)
+        public Task EnqueueAsync(T item, string? queueName, CancellationToken token)
         {
             LastQueueName = queueName;
             return Task.CompletedTask;
         }
 
-        public Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
+        public Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token)
             => Task.FromResult<Envelope<T>?>(null);
 
-        public Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+        public Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token)
             => Task.FromResult<Envelope<T>?>(null);
 
-        public Task AcknowledgeAsync(string envelopeId, CancellationToken token = default)
+        public Task AcknowledgeAsync(string envelopeId, CancellationToken token)
             => Task.CompletedTask;
 
-        public Task HandleProcessingErrorAsync(Envelope<T> envelope, int retryLimit, int retryDelayMs, ILogger logger, Exception exception, CancellationToken token = default)
+        public Task HandleProcessingErrorAsync(Envelope<T> envelope, int retryLimit, int retryDelayMs, ILogger logger, Exception exception, CancellationToken token)
             => Task.CompletedTask;
     }
 }

@@ -9,7 +9,7 @@ public sealed class EmailNotificationChannelSender(IEmailSender emailSender) : I
 
     public NotificationChannel Channel => NotificationChannel.Email;
 
-    public Task SendAsync(NotificationRequest request, CancellationToken cancellationToken = default)
+    public Task SendAsync(NotificationRequest request, CancellationToken cancellationToken)
     {
         var message = new EmailNotificationMessage(
             request.Recipient,

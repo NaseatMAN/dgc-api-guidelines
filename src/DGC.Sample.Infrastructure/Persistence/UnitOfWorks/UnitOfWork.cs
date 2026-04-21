@@ -25,7 +25,7 @@ namespace DGC.Sample.Infrastructure.Persistence.UnitOfWorks
             return new Repository<TEntity>(dbContext);
         }
 
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
             try
             {

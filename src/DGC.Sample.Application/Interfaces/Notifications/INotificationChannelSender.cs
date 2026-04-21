@@ -6,5 +6,5 @@ public interface INotificationChannelSender
 {
     NotificationChannel Channel { get; }
 
-    Task SendAsync(NotificationRequest request, CancellationToken cancellationToken = default);
+    Task SendAsync(NotificationRequest request, CancellationToken cancellationToken);
 }

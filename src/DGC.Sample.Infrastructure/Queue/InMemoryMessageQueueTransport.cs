@@ -13,12 +13,12 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
 
     public QueueTransport TransportType => QueueTransport.InMemory;
 
-    public Task EnqueueAsync(T item, CancellationToken token = default)
+    public Task EnqueueAsync(T item, CancellationToken token)
     {
         return EnqueueAsync(item, queueName: null, token);
     }
 
-    public Task EnqueueAsync(T item, string? queueName, CancellationToken token = default)
+    public Task EnqueueAsync(T item, string? queueName, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 
@@ -32,12 +32,12 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
         return Task.CompletedTask;
     }
 
-    public async Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
+    public async Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token)
     {
         return await DequeueAsync(waitMs, queueName: null, token).ConfigureAwait(false);
     }
 
-    public async Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+    public async Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token)
     {
         var queueKey = GetQueueKey(queueName);
         var queueState = GetQueueState(queueKey);
@@ -68,7 +68,7 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
         return envelope;
     }
 
-    public Task AcknowledgeAsync(string envelopeId, CancellationToken token = default)
+    public Task AcknowledgeAsync(string envelopeId, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         _inflight.TryRemove(envelopeId, out _);
@@ -81,7 +81,7 @@ public sealed class InMemoryMessageQueueTransport<T> : IMessageQueueTransport<T>
         int retryDelayMs,
         ILogger logger,
         Exception exception,
-        CancellationToken token = default)
+        CancellationToken token)
     {
         var queueKey = GetQueueKey(queueName: null);
         if (_inflight.TryRemove(envelope.Id, out var inflight))

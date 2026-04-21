@@ -61,7 +61,7 @@ public sealed class OrdersController(IOrderService orderService, IQueueService q
             created.TotalAmount,
             DateTimeOffset.UtcNow);
 
-        await _queueService.EnqueueAsync(message, cancellationToken: cancellationToken);
+        await _queueService.EnqueueAsync(message, null, cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }

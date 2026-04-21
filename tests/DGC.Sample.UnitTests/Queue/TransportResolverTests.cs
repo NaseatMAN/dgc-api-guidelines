@@ -40,17 +40,17 @@ public sealed class TransportResolverTests
     {
         public QueueTransport TransportType { get; } = transportType;
 
-        public Task EnqueueAsync(T item, CancellationToken token = default) => Task.CompletedTask;
+        public Task EnqueueAsync(T item, CancellationToken token) => Task.CompletedTask;
 
-        public Task EnqueueAsync(T item, string? queueName, CancellationToken token = default) => Task.CompletedTask;
+        public Task EnqueueAsync(T item, string? queueName, CancellationToken token) => Task.CompletedTask;
 
-        public Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token = default)
+        public Task<Envelope<T>?> DequeueAsync(int waitMs, CancellationToken token)
             => Task.FromResult<Envelope<T>?>(null);
 
-        public Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token = default)
+        public Task<Envelope<T>?> DequeueAsync(int waitMs, string? queueName, CancellationToken token)
             => Task.FromResult<Envelope<T>?>(null);
 
-        public Task AcknowledgeAsync(string envelopeId, CancellationToken token = default) => Task.CompletedTask;
+        public Task AcknowledgeAsync(string envelopeId, CancellationToken token) => Task.CompletedTask;
 
         public Task HandleProcessingErrorAsync(
             Envelope<T> envelope,
@@ -58,7 +58,7 @@ public sealed class TransportResolverTests
             int retryDelayMs,
             ILogger logger,
             Exception exception,
-            CancellationToken token = default)
+            CancellationToken token)
             => Task.CompletedTask;
     }
 }

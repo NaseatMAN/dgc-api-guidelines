@@ -12,17 +12,17 @@ public sealed class NotificationService(
     private readonly ITelegramSender _telegramSender = telegramSender;
     private readonly INotificationSenderFactory _notificationSenderFactory = notificationSenderFactory;
 
-    public Task SendEmailAsync(EmailNotificationMessage message, CancellationToken cancellationToken = default)
+    public Task SendEmailAsync(EmailNotificationMessage message, CancellationToken cancellationToken)
     {
         return _emailSender.SendAsync(message, cancellationToken);
     }
 
-    public Task SendTelegramAsync(TelegramNotificationMessage message, CancellationToken cancellationToken = default)
+    public Task SendTelegramAsync(TelegramNotificationMessage message, CancellationToken cancellationToken)
     {
         return _telegramSender.SendAsync(message, cancellationToken);
     }
 
-    public Task SendAsync(NotificationRequest request, CancellationToken cancellationToken = default)
+    public Task SendAsync(NotificationRequest request, CancellationToken cancellationToken)
     {
         var sender = _notificationSenderFactory.Get(request.Channel);
         return sender.SendAsync(request, cancellationToken);

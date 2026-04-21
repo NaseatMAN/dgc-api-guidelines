@@ -13,7 +13,7 @@ public sealed class SmtpEmailSender(
     private readonly EmailNotificationSettings _settings = settings;
     private readonly ILogger<SmtpEmailSender> _logger = logger;
 
-    public async Task SendAsync(EmailNotificationMessage message, CancellationToken cancellationToken = default)
+    public async Task SendAsync(EmailNotificationMessage message, CancellationToken cancellationToken)
     {
         if (!_settings.Enabled)
         {

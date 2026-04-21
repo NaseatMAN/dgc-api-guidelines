@@ -9,7 +9,7 @@ public sealed class TelegramNotificationChannelSender(ITelegramSender telegramSe
 
     public NotificationChannel Channel => NotificationChannel.Telegram;
 
-    public Task SendAsync(NotificationRequest request, CancellationToken cancellationToken = default)
+    public Task SendAsync(NotificationRequest request, CancellationToken cancellationToken)
     {
         var message = new TelegramNotificationMessage(
             request.Recipient,

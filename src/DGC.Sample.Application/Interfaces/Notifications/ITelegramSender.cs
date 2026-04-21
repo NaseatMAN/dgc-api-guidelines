@@ -4,5 +4,5 @@ namespace DGC.Sample.Application.Interfaces.Notifications;
 
 public interface ITelegramSender
 {
-    Task SendAsync(TelegramNotificationMessage message, CancellationToken cancellationToken = default);
+    Task SendAsync(TelegramNotificationMessage message, CancellationToken cancellationToken);
 }

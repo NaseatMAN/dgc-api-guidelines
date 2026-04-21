@@ -6,23 +6,23 @@ public interface IQueueService
 {
     Task EnqueueAsync<T>(
         T item,
-        QueueTransport? transport = null,
-        CancellationToken cancellationToken = default);
+        QueueTransport? transport,
+        CancellationToken cancellationToken);
 
     Task EnqueueAsync<T>(
         T item,
         QueueTransport? transport,
         string? queueName,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     Task<T?> DequeueAsync<T>(
-        QueueTransport? transport = null,
-        CancellationToken cancellationToken = default)
+        QueueTransport? transport,
+        CancellationToken cancellationToken)
         where T : class;
 
     Task<T?> DequeueAsync<T>(
         QueueTransport? transport,
         string? queueName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         where T : class;
 }

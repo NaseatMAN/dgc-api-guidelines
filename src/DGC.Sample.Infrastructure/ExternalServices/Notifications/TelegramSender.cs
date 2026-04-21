@@ -13,7 +13,7 @@ public sealed class TelegramSender(
     private readonly TelegramNotificationSettings _settings = settings;
     private readonly ILogger<TelegramSender> _logger = logger;
 
-    public async Task SendAsync(TelegramNotificationMessage message, CancellationToken cancellationToken = default)
+    public async Task SendAsync(TelegramNotificationMessage message, CancellationToken cancellationToken)
     {
         if (!_settings.Enabled)
         {

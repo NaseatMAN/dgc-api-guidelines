@@ -16,7 +16,7 @@ public sealed class FileStorageService(IConfiguration configuration) : IFileStor
 
     private readonly string _containerName = configuration["Storage:Blob:ContainerName"] ?? "files";
 
-    public async Task<UploadResultDto> UploadFileAsync(IReadOnlyList<UploadFileInputDto> files, CancellationToken cancellationToken = default)
+    public async Task<UploadResultDto> UploadFileAsync(IReadOnlyList<UploadFileInputDto> files, CancellationToken cancellationToken)
     {
         if (files.Count == 0)
         {
@@ -51,7 +51,7 @@ public sealed class FileStorageService(IConfiguration configuration) : IFileStor
         return new UploadResultDto(blobName);
     }
 
-    public async Task<PrivateBlobResultDto> GetBlobAsync(string blobName, CancellationToken cancellationToken = default)
+    public async Task<PrivateBlobResultDto> GetBlobAsync(string blobName, CancellationToken cancellationToken)
     {
         var blobClient = (await GetContainerClientAsync(cancellationToken)).GetBlobClient(blobName);
         if (!await blobClient.ExistsAsync(cancellationToken))
@@ -66,7 +66,7 @@ public sealed class FileStorageService(IConfiguration configuration) : IFileStor
         return new PrivateBlobResultDto(blobName, contentType, content);
     }
 
-    public async Task<BlobTextResultDto> GetBlobAsTextAsync(string blobName, CancellationToken cancellationToken = default)
+    public async Task<BlobTextResultDto> GetBlobAsTextAsync(string blobName, CancellationToken cancellationToken)
     {
         var blobClient = (await GetContainerClientAsync(cancellationToken)).GetBlobClient(blobName);
         if (!await blobClient.ExistsAsync(cancellationToken))

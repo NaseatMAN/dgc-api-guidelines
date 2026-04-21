@@ -4,5 +4,5 @@ namespace DGC.Sample.Application.Interfaces.Notifications;
 
 public interface IEmailSender
 {
-    Task SendAsync(EmailNotificationMessage message, CancellationToken cancellationToken = default);
+    Task SendAsync(EmailNotificationMessage message, CancellationToken cancellationToken);
 }
