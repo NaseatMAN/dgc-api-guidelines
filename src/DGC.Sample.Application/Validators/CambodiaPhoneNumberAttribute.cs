@@ -1,22 +1,41 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
+using PhoneNumbers;
 
 namespace DGC.Sample.Application.Validators;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
-public sealed partial class CambodiaPhoneNumberAttribute : ValidationAttribute
+public sealed class CambodiaPhoneNumberAttribute : ValidationAttribute
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        if (value is not string text || !PhoneRegex().IsMatch(text))
+        try
+        {
+            if (value is not string str)
+            {
+                throw new Exception("field value is not string");
+            }
+
+            var phoneNumberUtil = validationContext.GetRequiredService<PhoneNumberUtil>();
+            var phoneNumberObject = phoneNumberUtil.Parse(str, "KH");
+            if (!phoneNumberUtil.IsValidNumber(phoneNumberObject))
+            {
+                throw new Exception("phone number is not valid by google libphonenumber format");
+            }
+
+            return ValidationResult.Success;
+        }
+        catch
         {
             return new ValidationResult(
-                ErrorMessage ?? "Phone number must be a valid Cambodia phone number (e.g., 012345678 or +85512345678).");
+                "The value is not a Cambodian Phone Number type. eg: 017123456, 85512333444, +8551234445566",
+                [validationContext.MemberName ?? string.Empty]);
         }
-
-        return ValidationResult.Success;
     }
 
-    [GeneratedRegex(@"^(0|\+855)[1-9][0-9]{7,8}$", RegexOptions.CultureInvariant)]
-    private static partial Regex PhoneRegex();
+    public override string FormatErrorMessage(string name)
+    {
+        return string.Format(CultureInfo.CurrentCulture, ErrorMessageString, name);
+    }
 }
